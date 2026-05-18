@@ -188,8 +188,9 @@
 /* Animations */
 @keyframes stampDrop {
   0% { transform: scale(3) rotate(-6deg); opacity: 0; filter: blur(8px); }
-  60% { transform: scale(0.92) rotate(-6deg); opacity: 1; filter: blur(0); }
-  80% { transform: scale(1.06) rotate(-6deg); }
+  55% { transform: scale(0.88) rotate(-6deg); opacity: 1; filter: blur(0); }
+  72% { transform: scale(1.1) rotate(-6deg); }
+  85% { transform: scale(0.97) rotate(-6deg); }
   100% { transform: scale(1) rotate(-6deg); }
 }
 @keyframes barFill {
@@ -202,6 +203,119 @@
   40% { transform: translateX(6px); }
   60% { transform: translateX(-4px); }
   80% { transform: translateX(4px); }
+}
+@keyframes risein {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 0 0 hsl(var(--stamp) / 0.5); }
+  50% { box-shadow: 0 0 0 18px hsl(var(--stamp) / 0); }
+}
+@keyframes pulseGoldGlow {
+  0%,100% { box-shadow: 0 0 0 0 hsl(var(--accent) / 0.55), 0 12px 30px -10px hsl(var(--accent) / 0.5); }
+  50% { box-shadow: 0 0 0 16px hsl(var(--accent) / 0), 0 18px 40px -10px hsl(var(--accent) / 0.7); }
+}
+@keyframes chipPop {
+  0% { transform: translateY(8px) translateZ(-20px) scale(0.7); opacity: 0; }
+  60% { transform: translateY(-2px) translateZ(10px) scale(1.08); opacity: 1; }
+  100% { transform: translateY(0) translateZ(0) scale(1); opacity: 1; }
+}
+@keyframes chipLock {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); box-shadow: 0 0 0 6px hsl(142 70% 45% / 0.25); }
+  100% { transform: scale(1); }
+}
+@keyframes countFlash {
+  0%,100% { color: inherit; text-shadow: none; }
+  50% { color: hsl(var(--accent)); text-shadow: 0 0 14px hsl(var(--accent) / 0.6); }
+}
+@keyframes spotlightSweep {
+  0% { transform: translateX(-30%) rotate(8deg); opacity: 0; }
+  20% { opacity: 0.5; }
+  100% { transform: translateX(130%) rotate(8deg); opacity: 0; }
+}
+@keyframes breathe {
+  0%,100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+@keyframes tiltIn3d {
+  0% { transform: perspective(1200px) rotateX(22deg) translateY(60px) scale(0.85); opacity: 0; }
+  70% { transform: perspective(1200px) rotateX(-3deg) translateY(-4px) scale(1.02); opacity: 1; }
+  100% { transform: perspective(1200px) rotateX(0deg) translateY(0) scale(1); opacity: 1; }
+}
+@keyframes gavelSlam {
+  0% { transform: translateY(-180px) rotate(-55deg) scale(1.4); opacity: 0; }
+  55% { transform: translateY(0) rotate(-12deg) scale(1); opacity: 1; }
+  65% { transform: translateY(-14px) rotate(-18deg) scale(1); }
+  85% { transform: translateY(0) rotate(-12deg) scale(1); }
+  100% { transform: translateY(0) rotate(-12deg) scale(1); opacity: 1; }
+}
+@keyframes screenShake {
+  0%,100% { transform: translate(0,0); }
+  10% { transform: translate(-4px,2px); }
+  20% { transform: translate(5px,-3px); }
+  30% { transform: translate(-6px,1px); }
+  40% { transform: translate(4px,2px); }
+  50% { transform: translate(-3px,-2px); }
+  60% { transform: translate(2px,3px); }
+  70% { transform: translate(-2px,-1px); }
+  80% { transform: translate(2px,1px); }
+}
+@keyframes urgentPulse {
+  0%,100% { box-shadow: 0 0 0 0 hsl(var(--stamp) / 0.6); transform: scale(1); }
+  50% { box-shadow: 0 0 0 10px hsl(var(--stamp) / 0); transform: scale(1.04); }
+}
+@keyframes barCount {
+  from { width: 0%; }
+  to { width: var(--bar-w, 50%); }
+}
+
+.animate-stamp { animation: stampDrop 0.7s cubic-bezier(.2,.8,.2,1) forwards; }
+.animate-rise { animation: risein 0.5s ease-out both; }
+.animate-shake { animation: shake 0.45s ease; }
+.animate-pulse-glow { animation: pulseGlow 1.8s ease-out infinite; }
+.animate-pulse-gold { animation: pulseGoldGlow 2s ease-out infinite; }
+.animate-chip-pop { animation: chipPop 0.45s cubic-bezier(.2,.9,.3,1.2) both; transform-style: preserve-3d; }
+.animate-chip-lock { animation: chipLock 0.5s ease-out; }
+.animate-count-flash { animation: countFlash 0.7s ease-out; }
+.animate-spotlight { animation: spotlightSweep 6s ease-in-out infinite; }
+.animate-breathe { animation: breathe 3.4s ease-in-out infinite; }
+.animate-tilt-in { animation: tiltIn3d 0.9s cubic-bezier(.2,.8,.2,1) both; transform-style: preserve-3d; }
+.animate-gavel-slam { animation: gavelSlam 0.7s cubic-bezier(.2,.9,.3,1.1) both; }
+.animate-screen-shake { animation: screenShake 0.55s ease-in-out; }
+.animate-urgent-pulse { animation: urgentPulse 0.9s ease-in-out infinite; }
+.bar-fill { animation: barFill 0.9s ease-out forwards; }
+
+.perspective-stage { perspective: 1200px; transform-style: preserve-3d; }
+.tilt-press { transition: transform .2s ease; transform-style: preserve-3d; }
+.tilt-press-selected { transform: perspective(900px) rotateX(-6deg) translateZ(14px) scale(1.02); }
+
+.spotlight-layer {
+  position: absolute; inset: -20% -10%;
+  background: linear-gradient(100deg, transparent 40%, hsl(42 92% 70% / 0.18) 50%, transparent 60%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-stamp,
+  .animate-rise,
+  .animate-shake,
+  .animate-pulse-glow,
+  .animate-pulse-gold,
+  .animate-chip-pop,
+  .animate-chip-lock,
+  .animate-count-flash,
+  .animate-spotlight,
+  .animate-breathe,
+  .animate-tilt-in,
+  .animate-gavel-slam,
+  .animate-screen-shake,
+  .animate-urgent-pulse,
+  .bar-fill {
+    animation: none !important;
+  }
 }
 @keyframes risein {
   from { transform: translateY(14px); opacity: 0; }
