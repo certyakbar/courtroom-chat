@@ -118,8 +118,10 @@ export default function Trial() {
       else toast.error("Couldn't lock your vote.");
       return;
     }
+    markMyVote(trial.id);
     toast.success("Vote locked.");
     fetchAll();
+
   };
 
   const deliverVerdict = async () => {
