@@ -83,13 +83,29 @@ export default function Index() {
 
       <main className="px-5 pb-16 max-w-md mx-auto">
         <section className="pt-4">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-accent">⚖ Court is in session</p>
-          <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] mt-2 text-balance">
-            Put your friends <span className="text-primary">on trial.</span>
-          </h1>
-          <p className="mt-3 text-muted-foreground text-balance">
-            Start a private group-chat trial in seconds. Send the link, let the jury vote, and drop the verdict back into the chat.
-          </p>
+          {revengeOf ? (
+            <>
+              <p className="text-[11px] uppercase tracking-[0.3em] text-accent inline-flex items-center gap-2">
+                <Repeat2 className="w-3.5 h-3.5" /> Revenge case
+              </p>
+              <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] mt-2 text-balance">
+                <span className="text-primary">{revengeOf}</span> is appealing the verdict.
+              </h1>
+              <p className="mt-3 text-muted-foreground text-balance">
+                File the counter-case. The group chat will decide this one too.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-[11px] uppercase tracking-[0.3em] text-accent">⚖ Court is in session</p>
+              <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] mt-2 text-balance">
+                Put your friends <span className="text-primary">on trial.</span>
+              </h1>
+              <p className="mt-3 text-muted-foreground text-balance">
+                Start a private group-chat trial in seconds. Send the link, let the jury vote, and drop the verdict back into the chat.
+              </p>
+            </>
+          )}
         </section>
 
         <section className="mt-7 court-card p-5 animate-rise">
@@ -103,11 +119,15 @@ export default function Index() {
                 className="court-input"
               />
             </Field>
-            <Field label="What did they do?">
+            <Field label={revengeOf ? "What are they appealing?" : "What did they do?"}>
               <textarea
                 value={crime}
                 onChange={(e) => setCrime(e.target.value)}
-                placeholder="e.g. Said they were 5 minutes away while still in bed."
+                placeholder={
+                  revengeOf
+                    ? "e.g. Now they're appealing the verdict — claims the jury was biased."
+                    : "e.g. Said they were 5 minutes away while still in bed."
+                }
                 maxLength={140}
                 rows={3}
                 className="court-input resize-none"
