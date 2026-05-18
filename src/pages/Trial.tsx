@@ -63,13 +63,22 @@ export default function Trial() {
 
   const fetchAll = async () => {
     if (!slug) return;
-    const { data: t } = await supabase.from("instant_trials").select("*").eq("slug", slug).maybeSingle();
+    const { data: t } = await supabase
+      .from("instant_trials")
+      .select("id,slug,accused_name,crime_text,suggested_sentence,closes_at,status,result,verdict_sentence,best_evidence_id")
+      .eq("slug", slug)
+      .maybeSingle();
     if (!t) { setLoading(false); return; }
     setTrial(t as any);
-    const { data: vs } = await supabase.from("instant_votes").select("*").eq("trial_id", (t as any).id).order("created_at", { ascending: true });
+    const { data: vs } = await supabase
+      .from("instant_votes")
+      .select("id,trial_id,voter_nickname,vote,evidence_text,created_at")
+      .eq("trial_id", (t as any).id)
+      .order("created_at", { ascending: true });
     setVotes((vs as any) ?? []);
     setLoading(false);
   };
+
 
   useEffect(() => { fetchAll(); }, [slug]);
   // Poll every 4s for updates
