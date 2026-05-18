@@ -39,14 +39,14 @@ export default function TrialShare() {
   }
 
   const url = `${window.location.origin}/t/${trial.slug}`;
-  const waMsg = trialMessageWhatsApp(trial.accused_name, trial.crime_text, url);
-  const discordMsg = trialMessageDiscord(trial.accused_name, trial.crime_text, url);
-  const plainMsg = trialMessagePlain(trial.accused_name, trial.crime_text, url);
+  const waMsg = trialMessageWhatsApp(url);
+  const discordMsg = trialMessageDiscord(url);
+  const plainMsg = trialMessagePlain(url);
 
   return (
     <div className="min-h-dvh">
       <main className="px-5 pt-6 pb-20 max-w-md mx-auto">
-        {/* Screenshot-friendly summons card */}
+        {/* Screenshot-friendly summons card — generic, no case details */}
         <div id="summons-card" className="relative">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
             <span className="inline-block px-3 py-1 rounded-full text-[10px] tracking-[0.3em] font-stamp bg-[hsl(var(--stamp))] text-primary-foreground shadow-[var(--shadow-stamp)] uppercase">
@@ -54,34 +54,23 @@ export default function TrialShare() {
             </span>
           </div>
 
-          <div className="paper rounded-3xl p-6 pt-8 animate-rise">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[hsl(var(--stamp))] text-primary-foreground">
-                  <Scale className="w-4 h-4" />
-                </span>
-                <span className="font-stamp tracking-widest text-[hsl(var(--paper-ink))]">OBJECTION!</span>
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.25em] text-[hsl(24_20%_30%)]">
-                Case #{trial.slug.toUpperCase()}
+          <div className="paper rounded-3xl p-6 pt-8 animate-rise text-center">
+            <div className="flex items-center justify-center gap-2">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[hsl(var(--stamp))] text-primary-foreground">
+                <Scale className="w-4 h-4" />
               </span>
+              <span className="font-stamp tracking-widest text-[hsl(var(--paper-ink))]">OBJECTION!</span>
             </div>
 
             <div className="gavel-line mt-4" />
 
-            <div className="mt-6">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-[hsl(24_20%_35%)]">The accused</p>
-              <h1 className="font-display text-4xl mt-1 text-[hsl(var(--paper-ink))] text-balance leading-tight">
-                {trial.accused_name}
-              </h1>
-            </div>
+            <h1 className="font-display text-3xl sm:text-4xl mt-6 text-[hsl(var(--paper-ink))] text-balance leading-tight uppercase tracking-wide">
+              You've been summoned
+            </h1>
 
-            <div className="mt-5 rounded-xl bg-[hsl(36_30%_88%)] border border-[hsl(30_24%_78%)] p-4">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-[hsl(24_20%_35%)]">Charged with</p>
-              <p className="font-display text-lg mt-1 text-[hsl(var(--paper-ink))] text-balance">
-                {trial.crime_text}
-              </p>
-            </div>
+            <p className="mt-4 font-display text-lg text-[hsl(var(--paper-ink))] text-balance">
+              The group chat must decide.
+            </p>
 
             <div className="mt-5 flex items-center justify-center">
               <div className="stamp font-stamp text-lg sm:text-xl">PENDING JURY</div>
@@ -89,9 +78,16 @@ export default function TrialShare() {
 
             <div className="gavel-line mt-6" />
             <p className="mt-3 text-center text-[11px] uppercase tracking-[0.3em] text-[hsl(24_20%_35%)]">
-              The group chat must decide
+              Enter the courtroom
             </p>
           </div>
+        </div>
+
+        {/* Creator-only case details — never shared externally */}
+        <div className="mt-4 court-card p-4">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2">Your case</p>
+          <p className="text-sm text-muted-foreground">Accused: <span className="text-foreground font-medium">{trial.accused_name}</span></p>
+          <p className="text-sm text-muted-foreground mt-1">Crime: <span className="text-foreground font-medium">{trial.crime_text}</span></p>
         </div>
 
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
