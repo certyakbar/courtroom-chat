@@ -127,25 +127,14 @@ export default function Trial() {
 
   const tally = useMemo(() => tallyVotes(votes), [votes]);
 
-  const joinJury = async () => {
-    if (!trial) return;
-    const nick = nickname.trim();
-    if (!nick) { toast.error("Pick a nickname to join the jury."); return; }
-    setJoining(true);
-    setStoredNickname(nick);
-    const { error } = await supabase.from("instant_jurors").insert({
-      trial_id: trial.id,
-      browser_token: token,
-      nickname: nick.slice(0, 30),
-    });
-    setJoining(false);
-    if (error && error.code !== "23505") {
-      toast.error("Couldn't join the jury.");
-      return;
-    }
-    toast.success("You're on the jury.");
-    fetchAll();
-  };
+  const MICROCOPY = [
+    "The accused is sweating.",
+    "The court is reviewing evidence.",
+    "Someone is lying.",
+    "The group chat is deciding.",
+    "The verdict is loading dramatically.",
+  ];
+
 
   const submitVote = async () => {
     if (!trial || !vote) return;
