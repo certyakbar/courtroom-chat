@@ -15,6 +15,7 @@ import {
 import { pickSentence, tallyVotes, VOTE_LABEL, VOTE_SHORT, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
 import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame, Hash, Link as LinkIcon, Download, Users, CheckCircle2, AlertTriangle } from "lucide-react";
+import { CourtroomStage, type Phase, type Result } from "@/components/courtroom3d/CourtroomStage";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
@@ -214,6 +215,29 @@ export default function Trial() {
     return <div className="min-h-dvh"><CourtHeader /><div className="px-5 max-w-md mx-auto pt-10 text-center text-muted-foreground">This trial doesn't exist. <Link to="/" className="underline">Start one</Link>.</div></div>;
   }
 
+  // Stage props
+  const stagePhase: Phase = showReveal
+    ? "reveal"
+    : myVote
+    ? "waiting"
+    : "voting";
+  const stageResult: Result = showReveal
+    ? ((trial.result as Result) || (tally.winner as Result))
+    : null;
+
+  const Stage = (
+    <CourtroomStage
+      phase={stagePhase}
+      result={stageResult}
+      joinedCount={joinedCount}
+      votedCount={votedCount}
+      juryComplete={juryComplete}
+      countdownUrgent={countdown.urgent}
+      countdownCritical={countdown.critical}
+      className="fixed inset-0 z-0"
+    />
+  );
+
   if (showReveal) {
     const result = (trial.result as VoteValue) || tally.winner;
     const sentence = trial.verdict_sentence || pickSentence(result, trial.suggested_sentence);
@@ -248,9 +272,10 @@ export default function Trial() {
     };
 
     return (
-      <div className="min-h-dvh">
+      <div className="min-h-dvh relative">
+        {Stage}
         <CourtHeader />
-        <main className="px-5 pb-16 max-w-md mx-auto space-y-5">
+        <main className="relative z-10 px-5 pb-16 max-w-md mx-auto space-y-5">
           <VerdictReveal
             counts={tally.counts}
             total={tally.total}
@@ -332,9 +357,10 @@ export default function Trial() {
   else if (joinedCount > 0) juryStatusLine = `Waiting on ${waitingOn} juror${waitingOn === 1 ? "" : "s"}.`;
 
   return (
-    <div className={`min-h-dvh ${countdown.critical ? "animate-screen-shake" : ""}`}>
+    <div className={`min-h-dvh relative ${countdown.critical ? "animate-screen-shake" : ""}`}>
+      {Stage}
       <CourtHeader />
-      <main className="px-5 pb-16 max-w-md mx-auto perspective-stage">
+      <main className="relative z-10 px-5 pb-16 max-w-md mx-auto perspective-stage">
         {/* Case header — dramatic */}
         <div className={`court-card p-5 relative overflow-hidden ${countdown.urgent ? "animate-breathe" : ""}`}>
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
