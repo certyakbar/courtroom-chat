@@ -30,6 +30,13 @@ export function markMyRoom(roomCode: string) {
 export function isMyRoom(roomCode: string): boolean {
   return readSet(MY_ROOMS_KEY).has(roomCode);
 }
+export function setMyPlayerId(roomId: string, playerId: string) {
+  localStorage.setItem(`objection_player_${roomId}`, playerId);
+}
+export function getMyPlayerId(roomId: string): string | null {
+  return localStorage.getItem(`objection_player_${roomId}`);
+}
+
 
 
 export function getBrowserToken(): string {
