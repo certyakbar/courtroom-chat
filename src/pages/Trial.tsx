@@ -215,6 +215,29 @@ export default function Trial() {
     return <div className="min-h-dvh"><CourtHeader /><div className="px-5 max-w-md mx-auto pt-10 text-center text-muted-foreground">This trial doesn't exist. <Link to="/" className="underline">Start one</Link>.</div></div>;
   }
 
+  // Stage props
+  const stagePhase: Phase = showReveal
+    ? "reveal"
+    : myVote
+    ? "waiting"
+    : "voting";
+  const stageResult: Result = showReveal
+    ? ((trial.result as Result) || (tally.winner as Result))
+    : null;
+
+  const Stage = (
+    <CourtroomStage
+      phase={stagePhase}
+      result={stageResult}
+      joinedCount={joinedCount}
+      votedCount={votedCount}
+      juryComplete={juryComplete}
+      countdownUrgent={countdown.urgent}
+      countdownCritical={countdown.critical}
+      className="fixed inset-0 z-0"
+    />
+  );
+
   if (showReveal) {
     const result = (trial.result as VoteValue) || tally.winner;
     const sentence = trial.verdict_sentence || pickSentence(result, trial.suggested_sentence);
