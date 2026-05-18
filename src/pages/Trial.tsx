@@ -1,14 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { CourtHeader } from "@/components/CourtHeader";
 import { VerdictReveal } from "@/components/VerdictReveal";
 import { VerdictCard } from "@/components/VerdictCard";
 import { supabase } from "@/integrations/supabase/client";
 import { getBrowserToken, getStoredNickname, setStoredNickname } from "@/lib/browserToken";
-import { copyText, nativeShare, verdictShareText, whatsappUrl } from "@/lib/share";
+import {
+  copyText,
+  nativeShare,
+  verdictMessagePlain,
+  verdictMessageWhatsApp,
+  verdictMessageDiscord,
+} from "@/lib/share";
 import { pickSentence, tallyVotes, VOTE_LABEL, VOTE_SHORT, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
-import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame } from "lucide-react";
+import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame, Hash, Link as LinkIcon, Download } from "lucide-react";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
