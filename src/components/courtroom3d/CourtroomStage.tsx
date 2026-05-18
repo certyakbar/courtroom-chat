@@ -4,6 +4,7 @@ import { hasWebGL, prefersReducedMotion } from "./webglSupport";
 
 export type Phase = "summons" | "voting" | "waiting" | "reveal";
 export type Result = "guilty" | "not_guilty" | "everyone_wrong" | null;
+export type StageVariant = "ambient" | "hero" | "waiting" | "reveal";
 
 export interface CourtroomStageProps {
   phase: Phase;
@@ -13,6 +14,7 @@ export interface CourtroomStageProps {
   juryComplete: boolean;
   countdownUrgent?: boolean;
   countdownCritical?: boolean;
+  variant?: StageVariant;
   className?: string;
 }
 
@@ -27,7 +29,6 @@ class Stage3DBoundary extends Component<
     return { failed: true };
   }
   componentDidCatch(err: unknown) {
-    // Log once; UI gracefully falls back.
     // eslint-disable-next-line no-console
     console.warn("[CourtroomStage] 3D scene failed, using CSS fallback.", err);
   }
@@ -38,28 +39,40 @@ class Stage3DBoundary extends Component<
 }
 
 export function CourtroomStage(props: CourtroomStageProps) {
-  const { className } = props;
+  const { className, variant = "ambient" } = props;
   const [enable3D, setEnable3D] = useState(false);
 
   useEffect(() => {
     setEnable3D(hasWebGL() && !prefersReducedMotion());
   }, []);
 
+  // Subtle by default — never compete with the HTML UI.
+  const opacity =
+    variant === "reveal" ? 1 : variant === "waiting" ? 0.95 : 0.85;
+
   return (
     <div
       aria-hidden="true"
       className={`pointer-events-none ${className ?? ""}`}
-      style={{ position: "absolute", inset: 0, overflow: "hidden" }}
+      style={{ position: "absolute", inset: 0, overflow: "hidden", opacity }}
     >
       {enable3D ? (
         <Stage3DBoundary fallback={<CourtroomStageFallback {...props} />}>
           <Suspense fallback={<CourtroomStageFallback {...props} />}>
-            <Stage3D {...props} />
+            <Stage3D {...props} variant={variant} />
           </Suspense>
         </Stage3DBoundary>
       ) : (
         <CourtroomStageFallback {...props} />
       )}
+      {/* Radial vignette mask: fades geometry into the page edges, especially bottom. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 55% at 50% 38%, transparent 0%, hsl(220 35% 3% / 0.55) 65%, hsl(220 35% 3% / 0.95) 100%)",
+        }}
+      />
     </div>
   );
 }
