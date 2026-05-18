@@ -144,7 +144,33 @@ export default function Trial() {
     const sentence = trial.verdict_sentence || pickSentence(result, trial.suggested_sentence);
     const best = votes.find((v) => v.id === trial.best_evidence_id);
     const url = `${window.location.origin}/t/${trial.slug}`;
-    const shareText = verdictShareText(trial.crime_text, trial.accused_name, VOTE_LABEL[result], sentence, tally.confidence || 100, url);
+    const verdictLabel = VOTE_LABEL[result];
+    const confidence = tally.confidence || 100;
+    const waMsg = verdictMessageWhatsApp(trial.crime_text, trial.accused_name, verdictLabel, sentence, confidence, url);
+    const discordMsg = verdictMessageDiscord(trial.crime_text, trial.accused_name, verdictLabel, sentence, confidence, url);
+    const plainMsg = verdictMessagePlain(trial.crime_text, trial.accused_name, verdictLabel, sentence, confidence, url);
+
+    const saveCard = async () => {
+      const node = verdictCardRef.current;
+      if (!node) return;
+      try {
+        const { toPng } = await import("html-to-image");
+        const dataUrl = await toPng(node, {
+          pixelRatio: 2,
+          cacheBust: true,
+          backgroundColor: "#0a0d14",
+        });
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = `objection-verdict-${trial.slug}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast.success("Verdict card saved");
+      } catch (e) {
+        toast.error("Couldn't save card. Try a screenshot instead.");
+      }
+    };
 
     return (
       <div className="min-h-dvh">
@@ -154,42 +180,77 @@ export default function Trial() {
             counts={tally.counts}
             total={tally.total}
             winner={result}
-            confidence={tally.confidence || 100}
+            confidence={confidence}
             caseTitle={trial.crime_text}
             accused={trial.accused_name}
             sentence={sentence}
             bestEvidence={best?.evidence_text || null}
           />
 
-          <VerdictCard
-            caseTitle={trial.crime_text}
-            accused={trial.accused_name}
-            result={result}
-            sentence={sentence}
-            confidence={tally.confidence || 100}
-            bestEvidence={best?.evidence_text || null}
-          />
-
-          <div className="grid grid-cols-1 gap-3">
-            <button onClick={() => nativeShare({ title: "OBJECTION! Verdict", text: shareText, url }, shareText)} className="btn-hero">
-              <Share2 className="w-5 h-5" /> Share Verdict
-            </button>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => copyText(shareText, "Verdict text copied")} className="btn-ghost-court"><Copy className="w-4 h-4" /> Copy text</button>
-              <button onClick={() => copyText(url, "Link copied")} className="btn-ghost-court"><Copy className="w-4 h-4" /> Copy link</button>
-            </div>
-            <a href={whatsappUrl(shareText)} target="_blank" rel="noreferrer" className="btn-ghost-court">
-              <MessageCircle className="w-4 h-4" /> Share to WhatsApp
-            </a>
-            <Link to={`/?revenge=${encodeURIComponent(trial.accused_name)}`} className="btn-gold">
-              <Repeat2 className="w-4 h-4" /> File Revenge Case
-            </Link>
-            <Link to="/" className="btn-ghost-court"><Gavel className="w-4 h-4" /> Start a new trial</Link>
+          <div ref={verdictCardRef}>
+            <VerdictCard
+              caseTitle={trial.crime_text}
+              accused={trial.accused_name}
+              result={result}
+              sentence={sentence}
+              confidence={confidence}
+              bestEvidence={best?.evidence_text || null}
+            />
           </div>
+
+          <p className="text-center text-[11px] text-muted-foreground">
+            ↑ Screenshot this card or save it below.
+          </p>
+
+          {/* Dominant CTA — drop verdict back into chat */}
+          <button
+            onClick={() => nativeShare({ title: "OBJECTION! Verdict", text: plainMsg, url }, plainMsg)}
+            className="btn-hero w-full text-lg animate-pulse-glow"
+          >
+            <Share2 className="w-5 h-5" /> Drop Verdict in Chat
+          </button>
+
+          {/* Platform-specific verdict copies */}
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2 text-center">
+              Or copy the verdict
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button onClick={() => copyText(waMsg, "WhatsApp verdict copied")} className="btn-ghost-court">
+                <MessageCircle className="w-4 h-4" /> WhatsApp
+              </button>
+              <button onClick={() => copyText(discordMsg, "Discord verdict copied")} className="btn-ghost-court">
+                <Hash className="w-4 h-4" /> Discord
+              </button>
+              <button onClick={() => copyText(plainMsg, "Plain verdict copied")} className="btn-ghost-court">
+                <Copy className="w-4 h-4" /> Plain text
+              </button>
+              <button onClick={() => copyText(url, "Link copied")} className="btn-ghost-court">
+                <LinkIcon className="w-4 h-4" /> Link
+              </button>
+            </div>
+          </div>
+
+          {/* Save card + revenge — keep chat loop alive */}
+          <button onClick={saveCard} className="btn-ghost-court w-full">
+            <Download className="w-4 h-4" /> Save Verdict Card (PNG)
+          </button>
+
+          <Link
+            to={`/?revenge=${encodeURIComponent(trial.accused_name)}`}
+            className="btn-gold w-full"
+          >
+            <Repeat2 className="w-4 h-4" /> File Revenge Case
+          </Link>
+
+          <Link to="/" className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+            <Gavel className="w-3.5 h-3.5" /> Start a new trial
+          </Link>
         </main>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-dvh">
