@@ -59,10 +59,15 @@ export default function Trial() {
   const [vote, setVote] = useState<VoteValue | null>(null);
   const [evidence, setEvidence] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [joining, setJoining] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [microIdx, setMicroIdx] = useState(0);
   const verdictCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const i = setInterval(() => setMicroIdx((n) => n + 1), 2600);
+    return () => clearInterval(i);
+  }, []);
 
   const fetchAll = async () => {
     if (!slug) return;
@@ -122,25 +127,14 @@ export default function Trial() {
 
   const tally = useMemo(() => tallyVotes(votes), [votes]);
 
-  const joinJury = async () => {
-    if (!trial) return;
-    const nick = nickname.trim();
-    if (!nick) { toast.error("Pick a nickname to join the jury."); return; }
-    setJoining(true);
-    setStoredNickname(nick);
-    const { error } = await supabase.from("instant_jurors").insert({
-      trial_id: trial.id,
-      browser_token: token,
-      nickname: nick.slice(0, 30),
-    });
-    setJoining(false);
-    if (error && error.code !== "23505") {
-      toast.error("Couldn't join the jury.");
-      return;
-    }
-    toast.success("You're on the jury.");
-    fetchAll();
-  };
+  const MICROCOPY = [
+    "The accused is sweating.",
+    "The court is reviewing evidence.",
+    "Someone is lying.",
+    "The group chat is deciding.",
+    "The verdict is loading dramatically.",
+  ];
+
 
   const submitVote = async () => {
     if (!trial || !vote) return;
@@ -387,13 +381,13 @@ export default function Trial() {
           )}
         </div>
 
-        {!hasJoined && !myVote ? (
-          // Join the jury first
+        {!myVote ? (
           <div className="mt-5 space-y-4 animate-rise">
             <div className="text-center">
-              <p className="font-display text-2xl text-balance">You've been summoned as jury.</p>
-              <p className="text-sm text-muted-foreground mt-1">Join the jury to cast your verdict.</p>
+              <p className="font-display text-2xl text-balance">Your vote decides this.</p>
+              <p className="text-sm text-muted-foreground mt-1">Sign in, tap a verdict, lock it. Under 15 seconds.</p>
             </div>
+
             <div className="court-card p-4">
               <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sign as</label>
               <input
@@ -403,20 +397,6 @@ export default function Trial() {
                 maxLength={30}
                 className="court-input mt-1.5"
               />
-            </div>
-            <button
-              onClick={joinJury}
-              disabled={joining || !nickname.trim() || isExpired}
-              className="btn-hero w-full text-lg disabled:opacity-60"
-            >
-              <Users className="w-5 h-5" /> {joining ? "Joining..." : "Join the Jury"}
-            </button>
-          </div>
-        ) : !myVote ? (
-          <div className="mt-5 space-y-4 animate-rise">
-            <div className="text-center">
-              <p className="font-display text-2xl text-balance">Your vote decides this.</p>
-              <p className="text-sm text-muted-foreground mt-1">One tap. No takebacks.</p>
             </div>
 
             <div className="grid gap-2.5">
@@ -450,7 +430,7 @@ export default function Trial() {
 
             <button
               onClick={submitVote}
-              disabled={submitting || !vote || isExpired}
+              disabled={submitting || !vote || !nickname.trim() || isExpired}
               className="btn-hero w-full text-lg disabled:opacity-60"
             >
               <Gavel className="w-5 h-5" /> {submitting ? "Locking..." : vote ? "Lock my verdict" : "Choose a verdict"}
@@ -460,34 +440,67 @@ export default function Trial() {
             </p>
           </div>
         ) : (
-          <div className="mt-5 court-card p-5 animate-rise text-center">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Your verdict is locked</p>
-            <p className="font-stamp text-3xl mt-2 text-accent">{VOTE_SHORT[myVote.vote as VoteValue]}</p>
-            {myVote.evidence_text && <p className="text-sm italic mt-2 text-muted-foreground">"{myVote.evidence_text}"</p>}
-            <p className="text-xs text-muted-foreground mt-4">
-              {juryComplete ? "The jury is complete." : "Waiting for the rest of the jury…"}
+          <div className="mt-5 court-card p-5 animate-rise text-center relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_hsl(var(--stamp)/0.12),_transparent_70%)]" />
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground relative">Your verdict is locked</p>
+            <p className="font-stamp text-3xl mt-2 text-accent relative animate-rise">{VOTE_SHORT[myVote.vote as VoteValue]}</p>
+            {myVote.evidence_text && <p className="text-sm italic mt-2 text-muted-foreground relative">"{myVote.evidence_text}"</p>}
+            <p className="text-xs text-muted-foreground mt-4 relative">
+              Jury: {joinedCount} joined · {votedCount} voted
             </p>
+            <p className={`text-sm mt-1 relative ${juryComplete ? "text-emerald-400 font-medium" : "text-foreground/80"}`}>
+              {juryComplete ? "The jury is complete. Verdict incoming." : `Waiting on ${waitingOn} juror${waitingOn === 1 ? "" : "s"}.`}
+            </p>
+            {!juryComplete && (
+              <p key={microIdx} className="text-xs italic text-muted-foreground/80 mt-3 relative animate-rise">
+                {MICROCOPY[microIdx % MICROCOPY.length]}
+              </p>
+            )}
           </div>
         )}
 
-        {(isCreator || isExpired) && (
-          <div className="mt-5 space-y-2">
-            <button
-              onClick={deliverVerdict}
-              className={juryComplete || isExpired ? "btn-hero w-full text-lg animate-pulse-glow" : "btn-gold w-full"}
-            >
-              <ScrollText className="w-4 h-4" /> Deliver the Verdict
-            </button>
-            {!juryComplete && !isExpired && joinedCount > 0 && (
-              <p className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
-                <AlertTriangle className="w-3.5 h-3.5" /> Not all jurors have voted yet.
-              </p>
-            )}
-            {joinedCount === 0 && !isExpired && (
-              <p className="text-center text-[11px] text-muted-foreground">
-                No one has joined the jury yet.
-              </p>
-            )}
+        {isCreator && (
+          <div className="mt-5 court-card p-4 space-y-2 border-accent/40">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-accent font-stamp">Host controls</p>
+            <p className="text-xs text-muted-foreground">You created this trial. You control the verdict.</p>
+            {(() => {
+              const noVotes = votedCount === 0;
+              const ready = juryComplete || isExpired;
+              const label = isExpired
+                ? "Deliver Final Verdict"
+                : ready
+                ? "Drop the Verdict"
+                : noVotes
+                ? "Waiting for jury"
+                : "Deliver Early";
+              return (
+                <>
+                  <button
+                    onClick={deliverVerdict}
+                    disabled={noVotes && !isExpired}
+                    className={ready ? "btn-hero w-full text-lg animate-pulse-glow" : "btn-gold w-full disabled:opacity-60"}
+                  >
+                    <ScrollText className="w-4 h-4" /> {label}
+                  </button>
+                  {!ready && votedCount > 0 && (
+                    <p className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
+                      <AlertTriangle className="w-3.5 h-3.5" /> Not all jurors have voted yet.
+                    </p>
+                  )}
+                  {noVotes && !isExpired && (
+                    <p className="text-center text-[11px] text-muted-foreground">
+                      No votes yet. Share the link to summon the jury.
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {!isCreator && isExpired && !hasVerdict && (
+          <div className="mt-5 court-card p-4 text-center">
+            <p className="text-xs text-muted-foreground">Time's up. Waiting for the host to drop the verdict.</p>
           </div>
         )}
       </main>
