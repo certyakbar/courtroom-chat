@@ -164,7 +164,7 @@ export default function Index() {
 
             <button onClick={summon} disabled={loading} className="btn-hero w-full text-lg animate-pulse-glow disabled:opacity-60">
               <Gavel className="w-5 h-5" />
-              {loading ? "Summoning..." : "Summon the Jury"}
+              {loading ? "Summoning..." : revengeOf ? "File the revenge case" : "Summon the Jury"}
             </button>
           </div>
         </section>
