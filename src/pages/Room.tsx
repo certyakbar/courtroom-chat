@@ -63,11 +63,13 @@ export default function Room() {
 
   const refresh = async () => {
     if (!code) return;
-    const { data: r } = await supabase.from("rooms").select("*").eq("code", code).maybeSingle();
+    const { data: r } = await supabase.from("rooms")
+      .select("id,code,name,current_round_id").eq("code", code).maybeSingle();
     if (!r) { setLoading(false); return; }
     setRoom(r as any);
     const [{ data: ps }, { data: rd }, { data: roomRounds }] = await Promise.all([
-      supabase.from("players").select("*").eq("room_id", (r as any).id).order("joined_at", { ascending: true }),
+      supabase.from("players").select("id,room_id,nickname,avatar,joined_at").eq("room_id", (r as any).id).order("joined_at", { ascending: true }),
+
       (r as any).current_round_id
         ? supabase.from("rounds").select("*").eq("id", (r as any).current_round_id).maybeSingle()
         : Promise.resolve({ data: null }),
