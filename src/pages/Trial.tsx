@@ -30,15 +30,16 @@ function useCountdown(target?: string) {
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, []);
-  if (!target) return "";
+  if (!target) return { label: "", urgent: false, closed: false };
   const ms = new Date(target).getTime() - now;
-  if (ms <= 0) return "Closed";
+  if (ms <= 0) return { label: "CLOSED", urgent: false, closed: true };
   const s = Math.floor(ms / 1000);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  if (h) return `${h}h ${m}m`;
-  return `${m}:${sec.toString().padStart(2, "0")}`;
+  const urgent = ms < 60_000;
+  if (h) return { label: `${h}h ${m}m left`, urgent: false, closed: false };
+  return { label: `${m}:${sec.toString().padStart(2, "0")} left`, urgent, closed: false };
 }
 
 export default function Trial() {
