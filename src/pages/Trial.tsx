@@ -426,22 +426,28 @@ export default function Trial() {
               />
             </div>
 
-            <div className="grid gap-2.5">
-              {VOTE_OPTIONS.map((o) => (
-                <button
-                  key={o.v}
-                  type="button"
-                  onClick={() => setVote(o.v)}
-                  className={`text-left rounded-2xl px-5 py-4 border-2 transition-all ${
-                    vote === o.v
-                      ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)] scale-[1.01]"
-                      : "border-border bg-card hover:bg-secondary/70 active:scale-[0.99]"
-                  }`}
-                >
-                  <div className="font-stamp text-xl tracking-wide">{o.label}</div>
-                  <div className={`text-xs mt-0.5 ${vote === o.v ? "text-white/85" : "text-muted-foreground"}`}>{o.tag}</div>
-                </button>
-              ))}
+            <div className="grid gap-2.5 perspective-stage">
+              {VOTE_OPTIONS.map((o) => {
+                const selected = vote === o.v;
+                const dimmed = vote && !selected;
+                return (
+                  <button
+                    key={o.v}
+                    type="button"
+                    onClick={() => setVote(o.v)}
+                    className={`text-left rounded-2xl px-5 py-4 border-2 tilt-press ${
+                      selected
+                        ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)] tilt-press-selected animate-pulse-gold"
+                        : dimmed
+                        ? "border-border bg-card opacity-55 hover:opacity-80"
+                        : "border-border bg-card hover:bg-secondary/70 active:scale-[0.99]"
+                    }`}
+                  >
+                    <div className="font-stamp text-xl tracking-wide">{o.label}</div>
+                    <div className={`text-xs mt-0.5 ${selected ? "text-white/85" : "text-muted-foreground"}`}>{o.tag}</div>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="court-card p-4">
@@ -458,7 +464,7 @@ export default function Trial() {
             <button
               onClick={submitVote}
               disabled={submitting || !vote || !nickname.trim() || isExpired}
-              className="btn-hero w-full text-lg disabled:opacity-60"
+              className={`btn-hero w-full text-lg disabled:opacity-60 ${vote && !submitting ? "animate-pulse-glow" : ""}`}
             >
               <Gavel className="w-5 h-5" /> {submitting ? "Locking..." : vote ? "Lock my verdict" : "Choose a verdict"}
             </button>
