@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
-import { Gavel, Users, KeyRound, Sparkles } from "lucide-react";
+import { Gavel, Users, KeyRound, Sparkles, Repeat2 } from "lucide-react";
 import { CourtHeader } from "@/components/CourtHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { getBrowserToken, randomSlug } from "@/lib/browserToken";
