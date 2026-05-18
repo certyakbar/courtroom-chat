@@ -15,7 +15,6 @@ export async function nativeShare(opts: { title?: string; text?: string; url?: s
       await navigator.share(opts);
       return true;
     } catch {
-      // user dismissed
       return false;
     }
   }
@@ -23,13 +22,135 @@ export async function nativeShare(opts: { title?: string; text?: string; url?: s
   return false;
 }
 
-export function trialShareText(accused: string, crime: string, url: string) {
-  return `⚖️ OBJECTION!\n\n${accused} is on trial.\n\nCrime: ${crime}\n\nThe group chat must decide: Guilty / Not Guilty / Everyone Is Wrong\n\nVote here: ${url}`;
+/* ============================================================
+ * TRIAL SHARE MESSAGES
+ * ============================================================ */
+
+// Plain — works anywhere, no platform formatting
+export function trialMessagePlain(accused: string, crime: string, url: string) {
+  return `⚖️ OBJECTION!
+
+${accused.toUpperCase()} HAS BEEN SUMMONED.
+
+Crime:
+${crime}
+
+The group chat must decide:
+GUILTY / NOT GUILTY / EVERYONE IS WRONG
+
+Vote here:
+${url}`;
 }
 
-export function verdictShareText(caseTitle: string, accused: string, verdict: string, sentence: string, confidence: number, url: string) {
-  return `⚖️ VERDICT DELIVERED\n\nCase: ${caseTitle}\nAccused: ${accused}\nVerdict: ${verdict}\nSentence: ${sentence}\nJury confidence: ${confidence}%\n\nStart your own trial: ${url}`;
+// WhatsApp — supports *bold* and _italic_
+export function trialMessageWhatsApp(accused: string, crime: string, url: string) {
+  return `⚖️ *OBJECTION!*
+
+*${accused.toUpperCase()} HAS BEEN SUMMONED.*
+
+_Crime:_
+${crime}
+
+The group chat must decide:
+*GUILTY* / *NOT GUILTY* / *EVERYONE IS WRONG*
+
+Vote here:
+${url}`;
 }
+
+// Discord — supports **bold**, *italic*, > quotes, and embedded link suppression with <url>
+export function trialMessageDiscord(accused: string, crime: string, url: string) {
+  return `⚖️ **OBJECTION!**
+
+**${accused.toUpperCase()} HAS BEEN SUMMONED.**
+
+> *Crime:* ${crime}
+
+The group chat must decide:
+**GUILTY** / **NOT GUILTY** / **EVERYONE IS WRONG**
+
+Vote here: ${url}`;
+}
+
+/* ============================================================
+ * VERDICT SHARE MESSAGES
+ * ============================================================ */
+
+export function verdictMessagePlain(
+  caseTitle: string,
+  accused: string,
+  verdict: string,
+  sentence: string,
+  confidence: number,
+  url: string,
+) {
+  return `⚖️ VERDICT DELIVERED
+
+Case:
+${caseTitle}
+
+Accused:
+${accused}
+
+Verdict:
+${verdict}
+
+Sentence:
+${sentence}
+
+Jury confidence:
+${confidence}%
+
+Start your own trial:
+${url}`;
+}
+
+export function verdictMessageWhatsApp(
+  caseTitle: string,
+  accused: string,
+  verdict: string,
+  sentence: string,
+  confidence: number,
+  url: string,
+) {
+  return `⚖️ *VERDICT DELIVERED*
+
+*Case:* ${caseTitle}
+*Accused:* ${accused}
+*Verdict:* *${verdict}*
+*Sentence:* ${sentence}
+*Jury confidence:* ${confidence}%
+
+Start your own trial:
+${url}`;
+}
+
+export function verdictMessageDiscord(
+  caseTitle: string,
+  accused: string,
+  verdict: string,
+  sentence: string,
+  confidence: number,
+  url: string,
+) {
+  return `⚖️ **VERDICT DELIVERED**
+
+> **Case:** ${caseTitle}
+> **Accused:** ${accused}
+
+**Verdict: ${verdict}**
+*Sentence:* ${sentence}
+*Jury confidence:* ${confidence}%
+
+Start your own trial: ${url}`;
+}
+
+/* ============================================================
+ * LEGACY / BACKWARDS COMPAT
+ * ============================================================ */
+
+export const trialShareText = trialMessagePlain;
+export const verdictShareText = verdictMessagePlain;
 
 export function whatsappUrl(text: string) {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
