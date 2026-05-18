@@ -103,6 +103,38 @@ export type Database = {
           },
         ]
       }
+      instant_jurors: {
+        Row: {
+          browser_token: string
+          id: string
+          joined_at: string
+          nickname: string
+          trial_id: string
+        }
+        Insert: {
+          browser_token: string
+          id?: string
+          joined_at?: string
+          nickname: string
+          trial_id: string
+        }
+        Update: {
+          browser_token?: string
+          id?: string
+          joined_at?: string
+          nickname?: string
+          trial_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instant_jurors_trial_id_fkey"
+            columns: ["trial_id"]
+            isOneToOne: false
+            referencedRelation: "instant_trials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instant_trials: {
         Row: {
           accused_name: string
