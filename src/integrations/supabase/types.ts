@@ -14,7 +14,411 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      case_packs: {
+        Row: {
+          category: string | null
+          id: string
+          season_name: string
+        }
+        Insert: {
+          category?: string | null
+          id?: string
+          season_name: string
+        }
+        Update: {
+          category?: string | null
+          id?: string
+          season_name?: string
+        }
+        Relationships: []
+      }
+      case_templates: {
+        Row: {
+          description: string
+          id: string
+          pack_id: string
+          suggested_sentence: string | null
+          title: string
+        }
+        Insert: {
+          description: string
+          id?: string
+          pack_id: string
+          suggested_sentence?: string | null
+          title: string
+        }
+        Update: {
+          description?: string
+          id?: string
+          pack_id?: string
+          suggested_sentence?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_templates_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "case_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evidence: {
+        Row: {
+          created_at: string
+          id: string
+          player_id: string
+          round_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_id: string
+          round_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_id?: string
+          round_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instant_trials: {
+        Row: {
+          accused_name: string
+          best_evidence_id: string | null
+          closes_at: string
+          created_at: string
+          creator_browser_token: string
+          crime_text: string
+          id: string
+          result: string | null
+          slug: string
+          status: string
+          suggested_sentence: string | null
+          verdict_sentence: string | null
+        }
+        Insert: {
+          accused_name: string
+          best_evidence_id?: string | null
+          closes_at: string
+          created_at?: string
+          creator_browser_token: string
+          crime_text: string
+          id?: string
+          result?: string | null
+          slug: string
+          status?: string
+          suggested_sentence?: string | null
+          verdict_sentence?: string | null
+        }
+        Update: {
+          accused_name?: string
+          best_evidence_id?: string | null
+          closes_at?: string
+          created_at?: string
+          creator_browser_token?: string
+          crime_text?: string
+          id?: string
+          result?: string | null
+          slug?: string
+          status?: string
+          suggested_sentence?: string | null
+          verdict_sentence?: string | null
+        }
+        Relationships: []
+      }
+      instant_votes: {
+        Row: {
+          browser_token: string
+          created_at: string
+          evidence_text: string | null
+          id: string
+          trial_id: string
+          vote: string
+          voter_nickname: string
+        }
+        Insert: {
+          browser_token: string
+          created_at?: string
+          evidence_text?: string | null
+          id?: string
+          trial_id: string
+          vote: string
+          voter_nickname: string
+        }
+        Update: {
+          browser_token?: string
+          created_at?: string
+          evidence_text?: string | null
+          id?: string
+          trial_id?: string
+          vote?: string
+          voter_nickname?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instant_votes_trial_id_fkey"
+            columns: ["trial_id"]
+            isOneToOne: false
+            referencedRelation: "instant_trials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          avatar: string
+          browser_token: string
+          id: string
+          joined_at: string
+          nickname: string
+          room_id: string
+        }
+        Insert: {
+          avatar: string
+          browser_token: string
+          id?: string
+          joined_at?: string
+          nickname: string
+          room_id: string
+        }
+        Update: {
+          avatar?: string
+          browser_token?: string
+          id?: string
+          joined_at?: string
+          nickname?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          code: string
+          created_at: string
+          current_round_id: string | null
+          host_browser_token: string
+          id: string
+          name: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_round_id?: string | null
+          host_browser_token: string
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_round_id?: string | null
+          host_browser_token?: string
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      rounds: {
+        Row: {
+          accused_player_id: string | null
+          case_template_id: string | null
+          case_type: string
+          chaos_lawyer_player_id: string | null
+          created_at: string
+          custom_description: string | null
+          custom_title: string | null
+          ends_at: string | null
+          id: string
+          phase: string
+          room_id: string
+          suggested_sentence: string | null
+        }
+        Insert: {
+          accused_player_id?: string | null
+          case_template_id?: string | null
+          case_type: string
+          chaos_lawyer_player_id?: string | null
+          created_at?: string
+          custom_description?: string | null
+          custom_title?: string | null
+          ends_at?: string | null
+          id?: string
+          phase?: string
+          room_id: string
+          suggested_sentence?: string | null
+        }
+        Update: {
+          accused_player_id?: string | null
+          case_template_id?: string | null
+          case_type?: string
+          chaos_lawyer_player_id?: string | null
+          created_at?: string
+          custom_description?: string | null
+          custom_title?: string | null
+          ends_at?: string | null
+          id?: string
+          phase?: string
+          room_id?: string
+          suggested_sentence?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rounds_accused_player_id_fkey"
+            columns: ["accused_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_case_template_id_fkey"
+            columns: ["case_template_id"]
+            isOneToOne: false
+            referencedRelation: "case_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_chaos_lawyer_player_id_fkey"
+            columns: ["chaos_lawyer_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verdicts: {
+        Row: {
+          best_evidence_id: string | null
+          chaos_lawyer_found: boolean | null
+          created_at: string
+          id: string
+          instant_trial_id: string | null
+          result: string
+          round_id: string | null
+          sentence: string | null
+        }
+        Insert: {
+          best_evidence_id?: string | null
+          chaos_lawyer_found?: boolean | null
+          created_at?: string
+          id?: string
+          instant_trial_id?: string | null
+          result: string
+          round_id?: string | null
+          sentence?: string | null
+        }
+        Update: {
+          best_evidence_id?: string | null
+          chaos_lawyer_found?: boolean | null
+          created_at?: string
+          id?: string
+          instant_trial_id?: string | null
+          result?: string
+          round_id?: string | null
+          sentence?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verdicts_instant_trial_id_fkey"
+            columns: ["instant_trial_id"]
+            isOneToOne: false
+            referencedRelation: "instant_trials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verdicts_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      votes: {
+        Row: {
+          chaos_guess_player_id: string | null
+          created_at: string
+          id: string
+          player_id: string
+          round_id: string
+          vote: string
+        }
+        Insert: {
+          chaos_guess_player_id?: string | null
+          created_at?: string
+          id?: string
+          player_id: string
+          round_id: string
+          vote: string
+        }
+        Update: {
+          chaos_guess_player_id?: string | null
+          created_at?: string
+          id?: string
+          player_id?: string
+          round_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_chaos_guess_player_id_fkey"
+            columns: ["chaos_guess_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
