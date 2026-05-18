@@ -20,9 +20,9 @@ type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
   suggested_sentence: string | null; closes_at: string; status: string;
   result: string | null; verdict_sentence: string | null; best_evidence_id: string | null;
-  creator_browser_token: string;
 };
-type Vote = { id: string; trial_id: string; voter_nickname: string; browser_token: string; vote: string; evidence_text: string | null; created_at: string; };
+type Vote = { id: string; trial_id: string; voter_nickname: string; vote: string; evidence_text: string | null; created_at: string; };
+
 
 const VOTE_OPTIONS: { v: VoteValue; label: string; tag: string; color: string }[] = [
   { v: "guilty", label: "GUILTY", tag: "Throw the book.", color: "from-red-500 to-red-700" },
