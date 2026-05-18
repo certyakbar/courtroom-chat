@@ -63,16 +63,22 @@ export default function Room() {
     const { data: r } = await supabase.from("rooms").select("*").eq("code", code).maybeSingle();
     if (!r) { setLoading(false); return; }
     setRoom(r as any);
-    const [{ data: ps }, { data: rd }, { data: vds }] = await Promise.all([
+    const [{ data: ps }, { data: rd }, { data: roomRounds }] = await Promise.all([
       supabase.from("players").select("*").eq("room_id", (r as any).id).order("joined_at", { ascending: true }),
       (r as any).current_round_id
         ? supabase.from("rounds").select("*").eq("id", (r as any).current_round_id).maybeSingle()
         : Promise.resolve({ data: null }),
-      supabase.from("verdicts").select("*").not("round_id", "is", null).order("created_at", { ascending: false }),
+      supabase.from("rounds").select("id").eq("room_id", (r as any).id),
     ]);
     setPlayers((ps as any) ?? []);
     setRound((rd as any) ?? null);
-    setVerdicts(((vds as any) ?? []).filter((v: Verdict) => v.round_id));
+    const roundIds = ((roomRounds as any) ?? []).map((x: any) => x.id);
+    if (roundIds.length) {
+      const { data: vds } = await supabase.from("verdicts").select("*").in("round_id", roundIds).order("created_at", { ascending: false });
+      setVerdicts((vds as any) ?? []);
+    } else {
+      setVerdicts([]);
+    }
     if (rd) {
       const [{ data: ev }, { data: vs }] = await Promise.all([
         supabase.from("evidence").select("*").eq("round_id", (rd as any).id),
