@@ -317,17 +317,3 @@
     animation: none !important;
   }
 }
-@keyframes risein {
-  from { transform: translateY(14px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes pulseGlow {
-  0%,100% { box-shadow: 0 0 0 0 hsl(var(--stamp) / 0.5); }
-  50% { box-shadow: 0 0 0 18px hsl(var(--stamp) / 0); }
-}
-
-.animate-stamp { animation: stampDrop 0.7s cubic-bezier(.2,.8,.2,1) forwards; }
-.animate-rise { animation: risein 0.5s ease-out both; }
-.animate-shake { animation: shake 0.45s ease; }
-.animate-pulse-glow { animation: pulseGlow 1.8s ease-out infinite; }
-.bar-fill { animation: barFill 0.9s ease-out forwards; }
