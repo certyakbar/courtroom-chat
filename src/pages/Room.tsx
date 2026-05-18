@@ -119,16 +119,18 @@ export default function Room() {
     if (!nickname.trim()) { toast.error("Add a nickname."); return; }
     setStoredNickname(nickname.trim());
     setJoining(true);
-    const { error } = await supabase.from("players").insert({
+    const { data: inserted, error } = await supabase.from("players").insert({
       room_id: room.id, nickname: nickname.trim().slice(0, 30), avatar, browser_token: token,
-    });
+    }).select("id").single();
     setJoining(false);
     if (error) {
       if (error.code === "23505") { /* already joined */ refresh(); return; }
       toast.error("Couldn't join the room.");
       return;
     }
+    if (inserted?.id) setMyPlayerId(room.id, inserted.id);
     refresh();
+
   };
 
   const startRound = async (opts: {
