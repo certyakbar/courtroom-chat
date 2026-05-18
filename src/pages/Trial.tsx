@@ -89,8 +89,9 @@ export default function Trial() {
   }, [slug]);
 
   const countdown = useCountdown(trial?.closes_at);
-  const myVote = votes.find((v) => v.browser_token === token);
-  const isCreator = trial && trial.creator_browser_token === token;
+  const myVote = trial ? (hasMyVote(trial.id) ? votes[votes.length - 1] : undefined) : undefined;
+  const isCreator = trial && (isMyTrial(trial.id) || isMyTrial(trial.slug));
+
   const closesAtMs = trial ? new Date(trial.closes_at).getTime() : 0;
   const isExpired = trial && Date.now() >= closesAtMs;
   const hasVerdict = trial && (trial.status === "verdict_delivered" || trial.result);
