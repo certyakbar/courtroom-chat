@@ -111,6 +111,10 @@ export type Database = {
           created_at: string
           creator_browser_token: string
           crime_text: string
+          discord_channel_id: string | null
+          discord_guild_id: string | null
+          discord_message_id: string | null
+          hide_counts: boolean
           id: string
           result: string | null
           slug: string
@@ -125,6 +129,10 @@ export type Database = {
           created_at?: string
           creator_browser_token: string
           crime_text: string
+          discord_channel_id?: string | null
+          discord_guild_id?: string | null
+          discord_message_id?: string | null
+          hide_counts?: boolean
           id?: string
           result?: string | null
           slug: string
@@ -139,6 +147,10 @@ export type Database = {
           created_at?: string
           creator_browser_token?: string
           crime_text?: string
+          discord_channel_id?: string | null
+          discord_guild_id?: string | null
+          discord_message_id?: string | null
+          hide_counts?: boolean
           id?: string
           result?: string | null
           slug?: string
