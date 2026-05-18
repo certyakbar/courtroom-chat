@@ -272,9 +272,10 @@ export default function Trial() {
     };
 
     return (
-      <div className="min-h-dvh">
+      <div className="min-h-dvh relative">
+        {Stage}
         <CourtHeader />
-        <main className="px-5 pb-16 max-w-md mx-auto space-y-5">
+        <main className="relative z-10 px-5 pb-16 max-w-md mx-auto space-y-5">
           <VerdictReveal
             counts={tally.counts}
             total={tally.total}
