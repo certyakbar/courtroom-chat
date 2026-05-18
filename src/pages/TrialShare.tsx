@@ -44,8 +44,15 @@ export default function TrialShare() {
   const plainMsg = trialMessagePlain(url);
 
   return (
-    <div className="min-h-dvh">
-      <main className="px-5 pt-6 pb-20 max-w-md mx-auto">
+    <div className="min-h-dvh relative">
+      <CourtroomStage
+        phase="summons"
+        joinedCount={0}
+        votedCount={0}
+        juryComplete={false}
+        className="fixed inset-0 z-0"
+      />
+      <main className="relative z-10 px-5 pt-6 pb-20 max-w-md mx-auto">
         {/* Screenshot-friendly summons card — generic, no case details */}
         <div id="summons-card" className="relative">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
