@@ -332,12 +332,13 @@ export default function Trial() {
   else if (joinedCount > 0) juryStatusLine = `Waiting on ${waitingOn} juror${waitingOn === 1 ? "" : "s"}.`;
 
   return (
-    <div className="min-h-dvh">
+    <div className={`min-h-dvh ${countdown.critical ? "animate-screen-shake" : ""}`}>
       <CourtHeader />
-      <main className="px-5 pb-16 max-w-md mx-auto">
+      <main className="px-5 pb-16 max-w-md mx-auto perspective-stage">
         {/* Case header — dramatic */}
-        <div className="court-card p-5 relative overflow-hidden">
+        <div className={`court-card p-5 relative overflow-hidden ${countdown.urgent ? "animate-breathe" : ""}`}>
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
+          <div className="spotlight-layer animate-spotlight" />
           <div className="relative">
             <div className="flex items-center justify-between">
               <p className="text-[10px] uppercase tracking-[0.35em] text-accent font-stamp">⚖ Court in session</p>
@@ -345,6 +346,8 @@ export default function Trial() {
                 className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
                   countdown.closed
                     ? "border-border bg-secondary/60 text-muted-foreground"
+                    : countdown.critical
+                    ? "border-[hsl(var(--stamp))] bg-[hsl(var(--stamp)/0.28)] text-[hsl(0_95%_80%)] animate-urgent-pulse"
                     : countdown.urgent
                     ? "border-[hsl(var(--stamp))] bg-[hsl(var(--stamp)/0.18)] text-[hsl(0_90%_72%)] animate-pulse"
                     : "border-border bg-secondary/60 text-muted-foreground"
@@ -359,6 +362,12 @@ export default function Trial() {
             </h1>
             <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">Charged with</p>
             <p className="mt-1 text-foreground/95 text-balance text-lg font-display">{trial.crime_text}</p>
+            {countdown.critical && !countdown.closed && (
+              <p className="text-[11px] mt-3 text-[hsl(0_95%_78%)] uppercase tracking-[0.25em] font-stamp">Final votes now.</p>
+            )}
+            {countdown.urgent && !countdown.critical && !countdown.closed && (
+              <p className="text-[11px] mt-3 text-[hsl(0_85%_72%)] uppercase tracking-[0.25em]">Court is closing soon.</p>
+            )}
           </div>
         </div>
 
@@ -368,24 +377,25 @@ export default function Trial() {
             <div className="flex items-center gap-2 text-sm">
               <Users className="w-4 h-4 text-accent" />
               <span className="font-stamp tracking-wide">
-                Jury: {joinedCount} joined · {votedCount} voted
+                Jury: <span key={`j-${joinedFlash}`} className="animate-count-flash">{joinedCount}</span> joined ·{" "}
+                <span key={`v-${votedFlash}`} className="animate-count-flash">{votedCount}</span> voted
               </span>
             </div>
-            {juryComplete && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+            {juryComplete && <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-chip-lock" />}
           </div>
           <p className={`text-xs mt-1.5 ${juryComplete ? "text-emerald-400" : "text-muted-foreground"}`}>
             {juryStatusLine}
           </p>
           {jurors.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
+            <div className="flex flex-wrap gap-1.5 mt-3 perspective-stage">
               {jurors.map((j) => {
                 const voted = votes.some((v) => v.browser_token === j.browser_token);
                 return (
                   <span
                     key={j.id}
-                    className={`text-[11px] rounded-full px-2.5 py-1 border ${
+                    className={`text-[11px] rounded-full px-2.5 py-1 border animate-chip-pop ${voted ? "animate-chip-lock" : "animate-breathe"} ${
                       voted
-                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-[0_4px_14px_-4px_hsl(142_70%_45%/0.45)]"
                         : "bg-secondary/60 border-border text-muted-foreground"
                     }`}
                   >
@@ -396,6 +406,7 @@ export default function Trial() {
             </div>
           )}
         </div>
+
 
         {!myVote ? (
           <div className="mt-5 space-y-4 animate-rise">
