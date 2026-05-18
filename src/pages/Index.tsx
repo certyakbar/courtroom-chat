@@ -23,12 +23,23 @@ const LENGTH_MS: Record<string, number> = {
 
 export default function Index() {
   const nav = useNavigate();
+  const [params] = useSearchParams();
+  const revengeOf = params.get("revenge")?.trim() || "";
   const [accused, setAccused] = useState("");
   const [crime, setCrime] = useState("");
   const [sentence, setSentence] = useState("");
   const [length, setLength] = useState<"2m" | "10m" | "1h" | "24h">("2m");
   const [loading, setLoading] = useState(false);
   const [joinCode, setJoinCode] = useState("");
+
+  // Prefill from revenge param exactly once
+  useEffect(() => {
+    if (revengeOf) {
+      setAccused(revengeOf);
+      setCrime("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revengeOf]);
 
   const summon = async () => {
     const parsed = schema.safeParse({ accused, crime, sentence: sentence || undefined, length });
