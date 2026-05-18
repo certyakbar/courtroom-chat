@@ -8,7 +8,7 @@ import { getBrowserToken, getStoredNickname, setStoredNickname } from "@/lib/bro
 import { copyText, nativeShare, verdictShareText, whatsappUrl } from "@/lib/share";
 import { pickSentence, tallyVotes, VOTE_LABEL, VOTE_SHORT, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
-import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText } from "lucide-react";
+import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame } from "lucide-react";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
@@ -18,10 +18,10 @@ type Trial = {
 };
 type Vote = { id: string; trial_id: string; voter_nickname: string; browser_token: string; vote: string; evidence_text: string | null; created_at: string; };
 
-const VOTE_OPTIONS: { v: VoteValue; label: string; color: string }[] = [
-  { v: "guilty", label: "Guilty", color: "from-red-500 to-red-700" },
-  { v: "not_guilty", label: "Not Guilty", color: "from-emerald-500 to-emerald-700" },
-  { v: "everyone_wrong", label: "Everyone Is Wrong", color: "from-amber-400 to-amber-600" },
+const VOTE_OPTIONS: { v: VoteValue; label: string; tag: string; color: string }[] = [
+  { v: "guilty", label: "GUILTY", tag: "Throw the book.", color: "from-red-500 to-red-700" },
+  { v: "not_guilty", label: "NOT GUILTY", tag: "Let them walk.", color: "from-emerald-500 to-emerald-700" },
+  { v: "everyone_wrong", label: "EVERYONE IS WRONG", tag: "Burn it all down.", color: "from-amber-400 to-amber-600" },
 ];
 
 function useCountdown(target?: string) {
@@ -30,15 +30,16 @@ function useCountdown(target?: string) {
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, []);
-  if (!target) return "";
+  if (!target) return { label: "", urgent: false, closed: false };
   const ms = new Date(target).getTime() - now;
-  if (ms <= 0) return "Closed";
+  if (ms <= 0) return { label: "CLOSED", urgent: false, closed: true };
   const s = Math.floor(ms / 1000);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  if (h) return `${h}h ${m}m`;
-  return `${m}:${sec.toString().padStart(2, "0")}`;
+  const urgent = ms < 60_000;
+  if (h) return { label: `${h}h ${m}m left`, urgent: false, closed: false };
+  return { label: `${m}:${sec.toString().padStart(2, "0")} left`, urgent, closed: false };
 }
 
 export default function Trial() {
@@ -188,83 +189,108 @@ export default function Trial() {
     <div className="min-h-dvh">
       <CourtHeader />
       <main className="px-5 pb-16 max-w-md mx-auto">
-        <div className="court-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-accent">⚖ On trial</p>
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="w-3.5 h-3.5" /> {countdown}
-            </span>
+        {/* Case header — dramatic */}
+        <div className="court-card p-5 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] uppercase tracking-[0.35em] text-accent font-stamp">⚖ Court in session</p>
+              <span
+                className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
+                  countdown.closed
+                    ? "border-border bg-secondary/60 text-muted-foreground"
+                    : countdown.urgent
+                    ? "border-[hsl(var(--stamp))] bg-[hsl(var(--stamp)/0.18)] text-[hsl(0_90%_72%)] animate-pulse"
+                    : "border-border bg-secondary/60 text-muted-foreground"
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" /> {countdown.label}
+              </span>
+            </div>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">The accused</p>
+            <h1 className="font-display text-4xl mt-1 text-balance leading-tight">
+              <span className="text-primary">{trial.accused_name}</span>
+            </h1>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">Charged with</p>
+            <p className="mt-1 text-foreground/95 text-balance text-lg font-display">{trial.crime_text}</p>
+            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-accent" /> Jury: {votes.length}</span>
+            </div>
           </div>
-          <h1 className="font-display text-3xl mt-2 text-balance">
-            <span className="text-primary">{trial.accused_name}</span>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Crime</p>
-          <p className="mt-1 text-foreground/95 text-balance">{trial.crime_text}</p>
-          <div className="mt-3 text-xs text-muted-foreground">Jury so far: {votes.length}</div>
         </div>
 
         {!myVote ? (
-          <div className="mt-5 court-card p-5 space-y-4 animate-rise">
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Your nickname</label>
-              <input
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="e.g. Judge Jules"
-                maxLength={30}
-                className="court-input mt-1.5"
-              />
+          <div className="mt-5 space-y-4 animate-rise">
+            <div className="text-center">
+              <p className="font-display text-2xl text-balance">Your vote decides this.</p>
+              <p className="text-sm text-muted-foreground mt-1">One tap. No takebacks.</p>
             </div>
 
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Your verdict</p>
-              <div className="grid gap-2">
-                {VOTE_OPTIONS.map((o) => (
-                  <button
-                    key={o.v}
-                    type="button"
-                    onClick={() => setVote(o.v)}
-                    className={`text-left rounded-2xl px-4 py-3 border transition-all ${
-                      vote === o.v
-                        ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)]"
-                        : "border-border bg-secondary/40 hover:bg-secondary/70"
-                    }`}
-                  >
-                    <span className="font-semibold tracking-wide">{o.label}</span>
-                  </button>
-                ))}
+            <div className="grid gap-2.5">
+              {VOTE_OPTIONS.map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  onClick={() => setVote(o.v)}
+                  className={`text-left rounded-2xl px-5 py-4 border-2 transition-all ${
+                    vote === o.v
+                      ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)] scale-[1.01]"
+                      : "border-border bg-card hover:bg-secondary/70 active:scale-[0.99]"
+                  }`}
+                >
+                  <div className="font-stamp text-xl tracking-wide">{o.label}</div>
+                  <div className={`text-xs mt-0.5 ${vote === o.v ? "text-white/85" : "text-muted-foreground"}`}>{o.tag}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="court-card p-4 space-y-3">
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sign as</label>
+                <input
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="Your nickname"
+                  maxLength={30}
+                  className="court-input mt-1.5"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">One-line evidence (optional)</label>
+                <input
+                  value={evidence}
+                  onChange={(e) => setEvidence(e.target.value.slice(0, 80))}
+                  placeholder="Tell the court what you saw."
+                  maxLength={80}
+                  className="court-input mt-1.5"
+                />
               </div>
             </div>
 
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Evidence (optional)</label>
-              <input
-                value={evidence}
-                onChange={(e) => setEvidence(e.target.value.slice(0, 80))}
-                placeholder="One line, max 80 chars"
-                maxLength={80}
-                className="court-input mt-1.5"
-              />
-              <div className="text-[11px] text-muted-foreground text-right mt-1">{evidence.length}/80</div>
-            </div>
-
-            <button onClick={submitVote} disabled={submitting || !vote || isExpired} className="btn-hero w-full disabled:opacity-60">
-              <Gavel className="w-5 h-5" /> {submitting ? "Locking..." : "Lock my vote"}
+            <button
+              onClick={submitVote}
+              disabled={submitting || !vote || isExpired}
+              className="btn-hero w-full text-lg disabled:opacity-60"
+            >
+              <Gavel className="w-5 h-5" /> {submitting ? "Locking..." : vote ? "Lock my verdict" : "Choose a verdict"}
             </button>
+            <p className="text-center text-[11px] text-muted-foreground">
+              One vote per device. The jury is watching.
+            </p>
           </div>
         ) : (
-          <div className="mt-5 court-card p-5 animate-rise">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Your vote</p>
-            <p className="font-display text-2xl mt-1">{VOTE_SHORT[myVote.vote as VoteValue]}</p>
-            {myVote.evidence_text && <p className="text-sm italic mt-1 text-muted-foreground">“{myVote.evidence_text}”</p>}
-            <p className="text-sm text-muted-foreground mt-3">Locked. Waiting for the verdict...</p>
+          <div className="mt-5 court-card p-5 animate-rise text-center">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Your verdict is locked</p>
+            <p className="font-stamp text-3xl mt-2 text-accent">{VOTE_SHORT[myVote.vote as VoteValue]}</p>
+            {myVote.evidence_text && <p className="text-sm italic mt-2 text-muted-foreground">"{myVote.evidence_text}"</p>}
+            <p className="text-xs text-muted-foreground mt-4">Waiting for the rest of the jury…</p>
           </div>
         )}
 
         {votes.length > 0 && (
-          <div className="mt-5 court-card p-5">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">The jury</p>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-5 court-card p-4">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2">The jury</p>
+            <div className="flex flex-wrap gap-1.5">
               {votes.map((v) => (
                 <span key={v.id} className="text-xs bg-secondary/60 border border-border rounded-full px-2.5 py-1">
                   {v.voter_nickname}
@@ -276,13 +302,9 @@ export default function Trial() {
 
         {(isCreator || isExpired) && (
           <button onClick={deliverVerdict} className="btn-gold w-full mt-5">
-            <ScrollText className="w-4 h-4" /> Reveal verdict now
+            <ScrollText className="w-4 h-4" /> Deliver the verdict
           </button>
         )}
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          One vote per device. Keep it petty and playful.
-        </p>
       </main>
 
       <style>{`
