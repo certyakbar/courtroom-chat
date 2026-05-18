@@ -59,6 +59,7 @@ export default function Trial() {
   const [submitting, setSubmitting] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const verdictCardRef = useRef<HTMLDivElement>(null);
 
   const fetchAll = async () => {
     if (!slug) return;
