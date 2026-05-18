@@ -5,14 +5,15 @@ import { Avatar, AvatarPicker } from "@/components/Avatar";
 import { VerdictReveal } from "@/components/VerdictReveal";
 import { VerdictCard } from "@/components/VerdictCard";
 import { supabase } from "@/integrations/supabase/client";
-import { getBrowserToken, getStoredNickname, setStoredNickname } from "@/lib/browserToken";
+import { getBrowserToken, getStoredNickname, setStoredNickname, isMyRoom, markMyRoom } from "@/lib/browserToken";
 import { copyText, nativeShare } from "@/lib/share";
 import { pickSentence, tallyVotes, VOTE_LABEL, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
 import { Copy, Gavel, Repeat2, ScrollText, Share2, Sparkles, Swords, Trophy } from "lucide-react";
 
-type Room = { id: string; code: string; name: string | null; host_browser_token: string; current_round_id: string | null };
-type Player = { id: string; room_id: string; nickname: string; avatar: string; browser_token: string };
+type Room = { id: string; code: string; name: string | null; current_round_id: string | null };
+type Player = { id: string; room_id: string; nickname: string; avatar: string };
+
 type Round = {
   id: string; room_id: string; case_type: string; case_template_id: string | null;
   accused_player_id: string | null; custom_title: string | null; custom_description: string | null;
