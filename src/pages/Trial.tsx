@@ -492,44 +492,54 @@ export default function Trial() {
           </div>
         )}
 
-        {isCreator && (
-          <div className="mt-5 court-card p-4 space-y-2 border-accent/40">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-accent font-stamp">Host controls</p>
-            <p className="text-xs text-muted-foreground">You created this trial. You control the verdict.</p>
-            {(() => {
-              const noVotes = votedCount === 0;
-              const ready = juryComplete || isExpired;
-              const label = isExpired
-                ? "Deliver Final Verdict"
-                : ready
-                ? "Drop the Verdict"
-                : noVotes
-                ? "Waiting for jury"
-                : "Deliver Early";
-              return (
-                <>
-                  <button
-                    onClick={deliverVerdict}
-                    disabled={noVotes && !isExpired}
-                    className={ready ? "btn-hero w-full text-lg animate-pulse-glow" : "btn-gold w-full disabled:opacity-60"}
-                  >
-                    <ScrollText className="w-4 h-4" /> {label}
-                  </button>
-                  {!ready && votedCount > 0 && (
-                    <p className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Not all jurors have voted yet.
-                    </p>
-                  )}
-                  {noVotes && !isExpired && (
-                    <p className="text-center text-[11px] text-muted-foreground">
-                      No votes yet. Share the link to summon the jury.
-                    </p>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        )}
+        {isCreator && (() => {
+          const noVotes = votedCount === 0;
+          const ready = juryComplete || isExpired;
+          const partial = !ready && votedCount > 0;
+          const label = isExpired
+            ? "Deliver Final Verdict"
+            : ready
+            ? "Drop the Verdict"
+            : noVotes
+            ? "Waiting for jury"
+            : "Deliver Early";
+          const cardTone = isExpired
+            ? "border-[hsl(var(--stamp))]/60 shadow-[0_0_30px_-10px_hsl(var(--stamp)/0.6)]"
+            : ready
+            ? "border-emerald-500/50 shadow-[0_0_30px_-10px_hsl(142_70%_45%/0.55)]"
+            : partial
+            ? "border-amber-500/40"
+            : "border-accent/30";
+          return (
+            <div className={`mt-5 court-card p-4 space-y-2 border-2 ${cardTone} ${partial ? "animate-breathe" : ""}`}>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-accent font-stamp">Host controls</p>
+              <p className="text-xs text-muted-foreground">You created this trial. You control the verdict.</p>
+              <button
+                onClick={deliverVerdict}
+                disabled={noVotes && !isExpired}
+                className={
+                  ready
+                    ? "btn-hero w-full text-lg animate-pulse-gold"
+                    : partial
+                    ? "btn-gold w-full animate-pulse"
+                    : "btn-gold w-full disabled:opacity-60"
+                }
+              >
+                <ScrollText className="w-4 h-4" /> {label}
+              </button>
+              {partial && (
+                <p className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Not all jurors have voted yet.
+                </p>
+              )}
+              {noVotes && !isExpired && (
+                <p className="text-center text-[11px] text-muted-foreground">
+                  No votes yet. Share the link to summon the jury.
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {!isCreator && isExpired && !hasVerdict && (
           <div className="mt-5 court-card p-4 text-center">
