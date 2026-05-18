@@ -126,14 +126,29 @@ export default function Trial() {
   const waitingOn = Math.max(0, joinedCount - votedCount);
   const juryComplete = joinedCount > 0 && votedCount >= joinedCount;
 
+  // Flash counts when they change
+  const [joinedFlash, setJoinedFlash] = useState(0);
+  const [votedFlash, setVotedFlash] = useState(0);
+  const prevJoined = useRef(joinedCount);
+  const prevVoted = useRef(votedCount);
+  useEffect(() => {
+    if (joinedCount > prevJoined.current) setJoinedFlash((n) => n + 1);
+    prevJoined.current = joinedCount;
+  }, [joinedCount]);
+  useEffect(() => {
+    if (votedCount > prevVoted.current) setVotedFlash((n) => n + 1);
+    prevVoted.current = votedCount;
+  }, [votedCount]);
+
   const tally = useMemo(() => tallyVotes(votes), [votes]);
 
   const MICROCOPY = [
-    "The accused is sweating.",
-    "The court is reviewing evidence.",
-    "Someone is lying.",
-    "The group chat is deciding.",
-    "The verdict is loading dramatically.",
+    "The accused is sweating…",
+    "The jury is whispering…",
+    "Evidence is being reviewed…",
+    "Someone is definitely lying…",
+    "The group chat is deciding…",
+    "The verdict is loading dramatically…",
   ];
 
 
