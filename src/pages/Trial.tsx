@@ -59,10 +59,15 @@ export default function Trial() {
   const [vote, setVote] = useState<VoteValue | null>(null);
   const [evidence, setEvidence] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [joining, setJoining] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [microIdx, setMicroIdx] = useState(0);
   const verdictCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const i = setInterval(() => setMicroIdx((n) => n + 1), 2600);
+    return () => clearInterval(i);
+  }, []);
 
   const fetchAll = async () => {
     if (!slug) return;
