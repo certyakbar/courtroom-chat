@@ -48,7 +48,7 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
         <p className="text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground">Case</p>
         <h2 className="text-center font-display text-xl sm:text-2xl mt-1 text-balance">{caseTitle}</h2>
         <p className="text-center text-sm text-muted-foreground mt-1">
-          Accused: <span className="text-foreground font-medium">{accused}</span>
+          Accused: <span className={`text-foreground font-medium inline-block ${step >= 3 ? "animate-shake text-primary" : ""}`}>{accused}</span>
         </p>
 
         <div className="flex-1 flex flex-col items-center justify-center mt-6 gap-6">
