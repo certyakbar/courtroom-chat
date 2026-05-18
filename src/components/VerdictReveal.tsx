@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Gavel } from "lucide-react";
 import type { VoteValue } from "@/lib/verdict";
 import { VOTE_LABEL } from "@/lib/verdict";
 
@@ -20,35 +21,63 @@ const DRAMATIC_TAGS: Record<VoteValue, string> = {
   everyone_wrong: "Court has failed society.",
 };
 
+const TONE: Record<VoteValue, { bg: string; glow: string; stampColor: string; }> = {
+  guilty: {
+    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_28%/0.45),_transparent_60%)]",
+    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(var(--stamp)/0.32),_transparent_70%)]",
+    stampColor: "",
+  },
+  not_guilty: {
+    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(142_60%_25%/0.4),_transparent_60%)]",
+    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(142_70%_45%/0.28),_transparent_70%)]",
+    stampColor: "text-emerald-300",
+  },
+  everyone_wrong: {
+    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(38_92%_30%/0.4),_transparent_60%)]",
+    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(42_92%_56%/0.3),_transparent_70%)]",
+    stampColor: "text-amber-300",
+  },
+};
+
 export function VerdictReveal({ counts, total, winner, confidence, caseTitle, accused, sentence, bestEvidence, onDone }: Props) {
   const [step, setStep] = useState(0);
-  // 0: dark, 1: "jury has reached a verdict", 2: bars, 3: stamp, 4: details
+  // 0: dark, 1: jury reached verdict, 2: bars + accused shake, 3: gavel falls, 4: stamp + shake, 5: sentence/evidence
+  const [shake, setShake] = useState(false);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStep(1), 200),
+      setTimeout(() => setStep(1), 250),
       setTimeout(() => setStep(2), 1400),
-      setTimeout(() => setStep(3), 2900),
-      setTimeout(() => setStep(4), 3900),
-      setTimeout(() => onDone?.(), 4500),
+      setTimeout(() => setStep(3), 2700),
+      setTimeout(() => { setStep(4); setShake(true); }, 3400),
+      setTimeout(() => setShake(false), 3950),
+      setTimeout(() => setStep(5), 4200),
+      setTimeout(() => onDone?.(), 5000),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onDone]);
 
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
+  const tone = TONE[winner];
+  const isGuilty = winner === "guilty";
+  const isChaos = winner === "everyone_wrong";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border bg-[hsl(220_30%_4%)] p-6 sm:p-10 min-h-[600px] flex flex-col grain">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.3),_transparent_60%)]" />
-      {step >= 3 && (
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_hsl(var(--stamp)/0.18),_transparent_70%)] animate-rise" />
+    <div className={`relative overflow-hidden rounded-3xl border border-border bg-[hsl(220_30%_4%)] p-6 sm:p-10 min-h-[640px] flex flex-col grain perspective-stage ${shake ? "animate-screen-shake" : ""}`}>
+      <div className={`absolute inset-0 pointer-events-none ${tone.bg}`} />
+      {step >= 4 && (
+        <div className={`absolute inset-0 pointer-events-none ${tone.glow} animate-rise`} />
       )}
+      <div className="spotlight-layer animate-spotlight" />
 
       <div className="relative z-10 flex-1 flex flex-col">
         <p className="text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground">Case</p>
         <h2 className="text-center font-display text-xl sm:text-2xl mt-1 text-balance">{caseTitle}</h2>
         <p className="text-center text-sm text-muted-foreground mt-1">
-          Accused: <span className={`text-foreground font-medium inline-block ${step >= 3 ? "animate-shake text-primary" : ""}`}>{accused}</span>
+          Accused:{" "}
+          <span className={`text-foreground font-medium inline-block ${step >= 3 ? "animate-shake text-primary" : ""}`}>
+            {accused}
+          </span>
         </p>
 
         <div className="flex-1 flex flex-col items-center justify-center mt-6 gap-6">
@@ -58,7 +87,7 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
             </p>
           )}
 
-          {step >= 2 && step < 3 && (
+          {step >= 2 && step < 4 && (
             <div className="w-full max-w-sm space-y-3 animate-rise">
               {(["guilty", "not_guilty", "everyone_wrong"] as VoteValue[]).map((k) => (
                 <div key={k}>
@@ -80,9 +109,15 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
             </div>
           )}
 
-          {step >= 3 && (
+          {step === 3 && (
+            <div className="animate-gavel-slam text-accent" style={{ filter: "drop-shadow(0 16px 24px hsl(var(--stamp)/0.55))" }}>
+              <Gavel className="w-24 h-24 sm:w-32 sm:h-32" strokeWidth={1.4} />
+            </div>
+          )}
+
+          {step >= 4 && (
             <div className="flex flex-col items-center gap-5 animate-rise">
-              <div className="stamp font-stamp text-5xl sm:text-7xl animate-stamp px-6 py-4 leading-none">
+              <div className={`stamp font-stamp text-5xl sm:text-7xl animate-stamp px-6 py-4 leading-none ${tone.stampColor} ${isGuilty ? "" : ""} ${isChaos ? "rotate-3" : ""}`}>
                 {VOTE_LABEL[winner]}
               </div>
               <p className="font-display text-lg sm:text-xl text-foreground/90 text-center text-balance">
@@ -94,16 +129,16 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
             </div>
           )}
 
-          {step >= 4 && (
-            <div className="w-full max-w-md space-y-3 animate-rise">
+          {step >= 5 && (
+            <div className="w-full max-w-md space-y-3 animate-tilt-in">
               <div className="court-card p-4">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sentence</p>
                 <p className="font-display text-lg mt-1 text-balance">{sentence}</p>
               </div>
               {bestEvidence && (
-                <div className="court-card p-4">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Best evidence</p>
-                  <p className="mt-1 italic text-balance">"{bestEvidence}"</p>
+                <div className="paper rounded-2xl p-4 animate-rise">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-[hsl(24_20%_35%)]">Best evidence</p>
+                  <p className="mt-1 italic text-balance text-[hsl(var(--paper-ink))]">"{bestEvidence}"</p>
                 </div>
               )}
             </div>

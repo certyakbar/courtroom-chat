@@ -37,16 +37,17 @@ function useCountdown(target?: string) {
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, []);
-  if (!target) return { label: "", urgent: false, closed: false };
+  if (!target) return { label: "", urgent: false, critical: false, closed: false, ms: 0 };
   const ms = new Date(target).getTime() - now;
-  if (ms <= 0) return { label: "CLOSED", urgent: false, closed: true };
+  if (ms <= 0) return { label: "CLOSED", urgent: false, critical: false, closed: true, ms: 0 };
   const s = Math.floor(ms / 1000);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
   const urgent = ms < 60_000;
-  if (h) return { label: `${h}h ${m}m left`, urgent: false, closed: false };
-  return { label: `${m}:${sec.toString().padStart(2, "0")} left`, urgent, closed: false };
+  const critical = ms < 15_000;
+  if (h) return { label: `${h}h ${m}m left`, urgent: false, critical: false, closed: false, ms };
+  return { label: `${m}:${sec.toString().padStart(2, "0")} left`, urgent, critical, closed: false, ms };
 }
 
 export default function Trial() {
@@ -125,14 +126,29 @@ export default function Trial() {
   const waitingOn = Math.max(0, joinedCount - votedCount);
   const juryComplete = joinedCount > 0 && votedCount >= joinedCount;
 
+  // Flash counts when they change
+  const [joinedFlash, setJoinedFlash] = useState(0);
+  const [votedFlash, setVotedFlash] = useState(0);
+  const prevJoined = useRef(joinedCount);
+  const prevVoted = useRef(votedCount);
+  useEffect(() => {
+    if (joinedCount > prevJoined.current) setJoinedFlash((n) => n + 1);
+    prevJoined.current = joinedCount;
+  }, [joinedCount]);
+  useEffect(() => {
+    if (votedCount > prevVoted.current) setVotedFlash((n) => n + 1);
+    prevVoted.current = votedCount;
+  }, [votedCount]);
+
   const tally = useMemo(() => tallyVotes(votes), [votes]);
 
   const MICROCOPY = [
-    "The accused is sweating.",
-    "The court is reviewing evidence.",
-    "Someone is lying.",
-    "The group chat is deciding.",
-    "The verdict is loading dramatically.",
+    "The accused is sweating…",
+    "The jury is whispering…",
+    "Evidence is being reviewed…",
+    "Someone is definitely lying…",
+    "The group chat is deciding…",
+    "The verdict is loading dramatically…",
   ];
 
 
@@ -246,7 +262,7 @@ export default function Trial() {
             bestEvidence={best?.evidence_text || null}
           />
 
-          <div ref={verdictCardRef}>
+          <div ref={verdictCardRef} className="animate-tilt-in">
             <VerdictCard
               caseTitle={trial.crime_text}
               accused={trial.accused_name}
@@ -316,12 +332,13 @@ export default function Trial() {
   else if (joinedCount > 0) juryStatusLine = `Waiting on ${waitingOn} juror${waitingOn === 1 ? "" : "s"}.`;
 
   return (
-    <div className="min-h-dvh">
+    <div className={`min-h-dvh ${countdown.critical ? "animate-screen-shake" : ""}`}>
       <CourtHeader />
-      <main className="px-5 pb-16 max-w-md mx-auto">
+      <main className="px-5 pb-16 max-w-md mx-auto perspective-stage">
         {/* Case header — dramatic */}
-        <div className="court-card p-5 relative overflow-hidden">
+        <div className={`court-card p-5 relative overflow-hidden ${countdown.urgent ? "animate-breathe" : ""}`}>
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
+          <div className="spotlight-layer animate-spotlight" />
           <div className="relative">
             <div className="flex items-center justify-between">
               <p className="text-[10px] uppercase tracking-[0.35em] text-accent font-stamp">⚖ Court in session</p>
@@ -329,6 +346,8 @@ export default function Trial() {
                 className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
                   countdown.closed
                     ? "border-border bg-secondary/60 text-muted-foreground"
+                    : countdown.critical
+                    ? "border-[hsl(var(--stamp))] bg-[hsl(var(--stamp)/0.28)] text-[hsl(0_95%_80%)] animate-urgent-pulse"
                     : countdown.urgent
                     ? "border-[hsl(var(--stamp))] bg-[hsl(var(--stamp)/0.18)] text-[hsl(0_90%_72%)] animate-pulse"
                     : "border-border bg-secondary/60 text-muted-foreground"
@@ -343,6 +362,12 @@ export default function Trial() {
             </h1>
             <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">Charged with</p>
             <p className="mt-1 text-foreground/95 text-balance text-lg font-display">{trial.crime_text}</p>
+            {countdown.critical && !countdown.closed && (
+              <p className="text-[11px] mt-3 text-[hsl(0_95%_78%)] uppercase tracking-[0.25em] font-stamp">Final votes now.</p>
+            )}
+            {countdown.urgent && !countdown.critical && !countdown.closed && (
+              <p className="text-[11px] mt-3 text-[hsl(0_85%_72%)] uppercase tracking-[0.25em]">Court is closing soon.</p>
+            )}
           </div>
         </div>
 
@@ -352,24 +377,25 @@ export default function Trial() {
             <div className="flex items-center gap-2 text-sm">
               <Users className="w-4 h-4 text-accent" />
               <span className="font-stamp tracking-wide">
-                Jury: {joinedCount} joined · {votedCount} voted
+                Jury: <span key={`j-${joinedFlash}`} className="animate-count-flash">{joinedCount}</span> joined ·{" "}
+                <span key={`v-${votedFlash}`} className="animate-count-flash">{votedCount}</span> voted
               </span>
             </div>
-            {juryComplete && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+            {juryComplete && <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-chip-lock" />}
           </div>
           <p className={`text-xs mt-1.5 ${juryComplete ? "text-emerald-400" : "text-muted-foreground"}`}>
             {juryStatusLine}
           </p>
           {jurors.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
+            <div className="flex flex-wrap gap-1.5 mt-3 perspective-stage">
               {jurors.map((j) => {
                 const voted = votes.some((v) => v.browser_token === j.browser_token);
                 return (
                   <span
                     key={j.id}
-                    className={`text-[11px] rounded-full px-2.5 py-1 border ${
+                    className={`text-[11px] rounded-full px-2.5 py-1 border animate-chip-pop ${voted ? "animate-chip-lock" : "animate-breathe"} ${
                       voted
-                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-[0_4px_14px_-4px_hsl(142_70%_45%/0.45)]"
                         : "bg-secondary/60 border-border text-muted-foreground"
                     }`}
                   >
@@ -380,6 +406,7 @@ export default function Trial() {
             </div>
           )}
         </div>
+
 
         {!myVote ? (
           <div className="mt-5 space-y-4 animate-rise">
@@ -399,22 +426,28 @@ export default function Trial() {
               />
             </div>
 
-            <div className="grid gap-2.5">
-              {VOTE_OPTIONS.map((o) => (
-                <button
-                  key={o.v}
-                  type="button"
-                  onClick={() => setVote(o.v)}
-                  className={`text-left rounded-2xl px-5 py-4 border-2 transition-all ${
-                    vote === o.v
-                      ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)] scale-[1.01]"
-                      : "border-border bg-card hover:bg-secondary/70 active:scale-[0.99]"
-                  }`}
-                >
-                  <div className="font-stamp text-xl tracking-wide">{o.label}</div>
-                  <div className={`text-xs mt-0.5 ${vote === o.v ? "text-white/85" : "text-muted-foreground"}`}>{o.tag}</div>
-                </button>
-              ))}
+            <div className="grid gap-2.5 perspective-stage">
+              {VOTE_OPTIONS.map((o) => {
+                const selected = vote === o.v;
+                const dimmed = vote && !selected;
+                return (
+                  <button
+                    key={o.v}
+                    type="button"
+                    onClick={() => setVote(o.v)}
+                    className={`text-left rounded-2xl px-5 py-4 border-2 tilt-press ${
+                      selected
+                        ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)] tilt-press-selected animate-pulse-gold"
+                        : dimmed
+                        ? "border-border bg-card opacity-55 hover:opacity-80"
+                        : "border-border bg-card hover:bg-secondary/70 active:scale-[0.99]"
+                    }`}
+                  >
+                    <div className="font-stamp text-xl tracking-wide">{o.label}</div>
+                    <div className={`text-xs mt-0.5 ${selected ? "text-white/85" : "text-muted-foreground"}`}>{o.tag}</div>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="court-card p-4">
@@ -431,7 +464,7 @@ export default function Trial() {
             <button
               onClick={submitVote}
               disabled={submitting || !vote || !nickname.trim() || isExpired}
-              className="btn-hero w-full text-lg disabled:opacity-60"
+              className={`btn-hero w-full text-lg disabled:opacity-60 ${vote && !submitting ? "animate-pulse-glow" : ""}`}
             >
               <Gavel className="w-5 h-5" /> {submitting ? "Locking..." : vote ? "Lock my verdict" : "Choose a verdict"}
             </button>
@@ -459,44 +492,54 @@ export default function Trial() {
           </div>
         )}
 
-        {isCreator && (
-          <div className="mt-5 court-card p-4 space-y-2 border-accent/40">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-accent font-stamp">Host controls</p>
-            <p className="text-xs text-muted-foreground">You created this trial. You control the verdict.</p>
-            {(() => {
-              const noVotes = votedCount === 0;
-              const ready = juryComplete || isExpired;
-              const label = isExpired
-                ? "Deliver Final Verdict"
-                : ready
-                ? "Drop the Verdict"
-                : noVotes
-                ? "Waiting for jury"
-                : "Deliver Early";
-              return (
-                <>
-                  <button
-                    onClick={deliverVerdict}
-                    disabled={noVotes && !isExpired}
-                    className={ready ? "btn-hero w-full text-lg animate-pulse-glow" : "btn-gold w-full disabled:opacity-60"}
-                  >
-                    <ScrollText className="w-4 h-4" /> {label}
-                  </button>
-                  {!ready && votedCount > 0 && (
-                    <p className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Not all jurors have voted yet.
-                    </p>
-                  )}
-                  {noVotes && !isExpired && (
-                    <p className="text-center text-[11px] text-muted-foreground">
-                      No votes yet. Share the link to summon the jury.
-                    </p>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        )}
+        {isCreator && (() => {
+          const noVotes = votedCount === 0;
+          const ready = juryComplete || isExpired;
+          const partial = !ready && votedCount > 0;
+          const label = isExpired
+            ? "Deliver Final Verdict"
+            : ready
+            ? "Drop the Verdict"
+            : noVotes
+            ? "Waiting for jury"
+            : "Deliver Early";
+          const cardTone = isExpired
+            ? "border-[hsl(var(--stamp))]/60 shadow-[0_0_30px_-10px_hsl(var(--stamp)/0.6)]"
+            : ready
+            ? "border-emerald-500/50 shadow-[0_0_30px_-10px_hsl(142_70%_45%/0.55)]"
+            : partial
+            ? "border-amber-500/40"
+            : "border-accent/30";
+          return (
+            <div className={`mt-5 court-card p-4 space-y-2 border-2 ${cardTone} ${partial ? "animate-breathe" : ""}`}>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-accent font-stamp">Host controls</p>
+              <p className="text-xs text-muted-foreground">You created this trial. You control the verdict.</p>
+              <button
+                onClick={deliverVerdict}
+                disabled={noVotes && !isExpired}
+                className={
+                  ready
+                    ? "btn-hero w-full text-lg animate-pulse-gold"
+                    : partial
+                    ? "btn-gold w-full animate-pulse"
+                    : "btn-gold w-full disabled:opacity-60"
+                }
+              >
+                <ScrollText className="w-4 h-4" /> {label}
+              </button>
+              {partial && (
+                <p className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Not all jurors have voted yet.
+                </p>
+              )}
+              {noVotes && !isExpired && (
+                <p className="text-center text-[11px] text-muted-foreground">
+                  No votes yet. Share the link to summon the jury.
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {!isCreator && isExpired && !hasVerdict && (
           <div className="mt-5 court-card p-4 text-center">
