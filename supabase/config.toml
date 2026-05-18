@@ -1,1 +1,7 @@
 project_id = "jiyizedncavccyrxgqub"
+
+[functions.discord-interactions]
+verify_jwt = false
+
+[functions.discord-register-commands]
+verify_jwt = false
