@@ -4,7 +4,7 @@ import { CourtHeader } from "@/components/CourtHeader";
 import { VerdictReveal } from "@/components/VerdictReveal";
 import { VerdictCard } from "@/components/VerdictCard";
 import { supabase } from "@/integrations/supabase/client";
-import { getBrowserToken, getStoredNickname, setStoredNickname } from "@/lib/browserToken";
+import { getBrowserToken, getStoredNickname, setStoredNickname, isMyTrial, markMyVote, hasMyVote } from "@/lib/browserToken";
 import {
   copyText,
   nativeShare,
