@@ -23,14 +23,17 @@ export default function PartyNew() {
     const { data: room, error } = await supabase
       .from("rooms")
       .insert({ code, name: name.trim() || null, host_browser_token: token })
-      .select().single();
+      .select("id,code,name,current_round_id").single();
     if (error || !room) { setLoading(false); toast.error("Couldn't open the courtroom."); return; }
     const { error: pErr } = await supabase.from("players").insert({
       room_id: room.id, nickname: nickname.trim().slice(0, 30), avatar, browser_token: token,
     });
     setLoading(false);
     if (pErr) { toast.error("Couldn't seat the host."); return; }
+    const { markMyRoom } = await import("@/lib/browserToken");
+    markMyRoom(room.code);
     nav(`/r/${room.code}`);
+
   };
 
   return (

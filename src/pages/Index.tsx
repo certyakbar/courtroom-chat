@@ -60,14 +60,18 @@ export default function Index() {
         closes_at: new Date(Date.now() + LENGTH_MS[length]).toISOString(),
         creator_browser_token: token,
       })
-      .select()
+      .select("id,slug")
       .single();
     setLoading(false);
     if (error || !data) {
       toast.error("Court is offline. Try again.");
       return;
     }
+    const { markMyTrial } = await import("@/lib/browserToken");
+    markMyTrial((data as any).id);
+    markMyTrial((data as any).slug);
     nav(`/t/${data.slug}/share`);
+
   };
 
   const join = (e: React.FormEvent) => {

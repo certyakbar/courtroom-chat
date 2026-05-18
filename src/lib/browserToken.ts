@@ -1,5 +1,43 @@
 const KEY = "objection_browser_token";
 const NICK_KEY = "objection_nickname";
+const MY_TRIALS_KEY = "objection_my_trials";
+const MY_VOTES_KEY = "objection_my_votes";
+const MY_ROOMS_KEY = "objection_my_rooms";
+
+function readSet(key: string): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
+  catch { return new Set(); }
+}
+function writeSet(key: string, s: Set<string>) {
+  localStorage.setItem(key, JSON.stringify([...s].slice(-200)));
+}
+
+export function markMyTrial(idOrSlug: string) {
+  const s = readSet(MY_TRIALS_KEY); s.add(idOrSlug); writeSet(MY_TRIALS_KEY, s);
+}
+export function isMyTrial(idOrSlug: string): boolean {
+  return readSet(MY_TRIALS_KEY).has(idOrSlug);
+}
+export function markMyVote(trialId: string) {
+  const s = readSet(MY_VOTES_KEY); s.add(trialId); writeSet(MY_VOTES_KEY, s);
+}
+export function hasMyVote(trialId: string): boolean {
+  return readSet(MY_VOTES_KEY).has(trialId);
+}
+export function markMyRoom(roomCode: string) {
+  const s = readSet(MY_ROOMS_KEY); s.add(roomCode); writeSet(MY_ROOMS_KEY, s);
+}
+export function isMyRoom(roomCode: string): boolean {
+  return readSet(MY_ROOMS_KEY).has(roomCode);
+}
+export function setMyPlayerId(roomId: string, playerId: string) {
+  localStorage.setItem(`objection_player_${roomId}`, playerId);
+}
+export function getMyPlayerId(roomId: string): string | null {
+  return localStorage.getItem(`objection_player_${roomId}`);
+}
+
+
 
 export function getBrowserToken(): string {
   let t = localStorage.getItem(KEY);

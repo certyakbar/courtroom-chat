@@ -5,14 +5,15 @@ import { Avatar, AvatarPicker } from "@/components/Avatar";
 import { VerdictReveal } from "@/components/VerdictReveal";
 import { VerdictCard } from "@/components/VerdictCard";
 import { supabase } from "@/integrations/supabase/client";
-import { getBrowserToken, getStoredNickname, setStoredNickname } from "@/lib/browserToken";
+import { getBrowserToken, getStoredNickname, setStoredNickname, isMyRoom, markMyRoom, setMyPlayerId, getMyPlayerId } from "@/lib/browserToken";
 import { copyText, nativeShare } from "@/lib/share";
 import { pickSentence, tallyVotes, VOTE_LABEL, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
 import { Copy, Gavel, Repeat2, ScrollText, Share2, Sparkles, Swords, Trophy } from "lucide-react";
 
-type Room = { id: string; code: string; name: string | null; host_browser_token: string; current_round_id: string | null };
-type Player = { id: string; room_id: string; nickname: string; avatar: string; browser_token: string };
+type Room = { id: string; code: string; name: string | null; current_round_id: string | null };
+type Player = { id: string; room_id: string; nickname: string; avatar: string };
+
 type Round = {
   id: string; room_id: string; case_type: string; case_template_id: string | null;
   accused_player_id: string | null; custom_title: string | null; custom_description: string | null;
@@ -49,8 +50,10 @@ export default function Room() {
   const [avatar, setAvatar] = useState("clown");
   const [joining, setJoining] = useState(false);
 
-  const me = players.find((p) => p.browser_token === token);
-  const isHost = room && room.host_browser_token === token;
+  const myPlayerId = room ? getMyPlayerId(room.id) : null;
+  const me = players.find((p) => p.id === myPlayerId);
+  const isHost = room && isMyRoom(room.code);
+
   const chaosMissionIdx = useMemo(() => {
     if (!round) return 0;
     let h = 0;
@@ -60,11 +63,13 @@ export default function Room() {
 
   const refresh = async () => {
     if (!code) return;
-    const { data: r } = await supabase.from("rooms").select("*").eq("code", code).maybeSingle();
+    const { data: r } = await supabase.from("rooms")
+      .select("id,code,name,current_round_id").eq("code", code).maybeSingle();
     if (!r) { setLoading(false); return; }
     setRoom(r as any);
     const [{ data: ps }, { data: rd }, { data: roomRounds }] = await Promise.all([
-      supabase.from("players").select("*").eq("room_id", (r as any).id).order("joined_at", { ascending: true }),
+      supabase.from("players").select("id,room_id,nickname,avatar,joined_at").eq("room_id", (r as any).id).order("joined_at", { ascending: true }),
+
       (r as any).current_round_id
         ? supabase.from("rounds").select("*").eq("id", (r as any).current_round_id).maybeSingle()
         : Promise.resolve({ data: null }),
@@ -114,16 +119,18 @@ export default function Room() {
     if (!nickname.trim()) { toast.error("Add a nickname."); return; }
     setStoredNickname(nickname.trim());
     setJoining(true);
-    const { error } = await supabase.from("players").insert({
+    const { data: inserted, error } = await supabase.from("players").insert({
       room_id: room.id, nickname: nickname.trim().slice(0, 30), avatar, browser_token: token,
-    });
+    }).select("id").single();
     setJoining(false);
     if (error) {
       if (error.code === "23505") { /* already joined */ refresh(); return; }
       toast.error("Couldn't join the room.");
       return;
     }
+    if (inserted?.id) setMyPlayerId(room.id, inserted.id);
     refresh();
+
   };
 
   const startRound = async (opts: {

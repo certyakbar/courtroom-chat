@@ -4,7 +4,7 @@ import { CourtHeader } from "@/components/CourtHeader";
 import { VerdictReveal } from "@/components/VerdictReveal";
 import { VerdictCard } from "@/components/VerdictCard";
 import { supabase } from "@/integrations/supabase/client";
-import { getBrowserToken, getStoredNickname, setStoredNickname } from "@/lib/browserToken";
+import { getBrowserToken, getStoredNickname, setStoredNickname, isMyTrial, markMyVote, hasMyVote } from "@/lib/browserToken";
 import {
   copyText,
   nativeShare,
@@ -20,9 +20,9 @@ type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
   suggested_sentence: string | null; closes_at: string; status: string;
   result: string | null; verdict_sentence: string | null; best_evidence_id: string | null;
-  creator_browser_token: string;
 };
-type Vote = { id: string; trial_id: string; voter_nickname: string; browser_token: string; vote: string; evidence_text: string | null; created_at: string; };
+type Vote = { id: string; trial_id: string; voter_nickname: string; vote: string; evidence_text: string | null; created_at: string; };
+
 
 const VOTE_OPTIONS: { v: VoteValue; label: string; tag: string; color: string }[] = [
   { v: "guilty", label: "GUILTY", tag: "Throw the book.", color: "from-red-500 to-red-700" },
@@ -63,13 +63,22 @@ export default function Trial() {
 
   const fetchAll = async () => {
     if (!slug) return;
-    const { data: t } = await supabase.from("instant_trials").select("*").eq("slug", slug).maybeSingle();
+    const { data: t } = await supabase
+      .from("instant_trials")
+      .select("id,slug,accused_name,crime_text,suggested_sentence,closes_at,status,result,verdict_sentence,best_evidence_id")
+      .eq("slug", slug)
+      .maybeSingle();
     if (!t) { setLoading(false); return; }
     setTrial(t as any);
-    const { data: vs } = await supabase.from("instant_votes").select("*").eq("trial_id", (t as any).id).order("created_at", { ascending: true });
+    const { data: vs } = await supabase
+      .from("instant_votes")
+      .select("id,trial_id,voter_nickname,vote,evidence_text,created_at")
+      .eq("trial_id", (t as any).id)
+      .order("created_at", { ascending: true });
     setVotes((vs as any) ?? []);
     setLoading(false);
   };
+
 
   useEffect(() => { fetchAll(); }, [slug]);
   // Poll every 4s for updates
@@ -80,8 +89,9 @@ export default function Trial() {
   }, [slug]);
 
   const countdown = useCountdown(trial?.closes_at);
-  const myVote = votes.find((v) => v.browser_token === token);
-  const isCreator = trial && trial.creator_browser_token === token;
+  const myVote = trial ? (hasMyVote(trial.id) ? votes[votes.length - 1] : undefined) : undefined;
+  const isCreator = trial && (isMyTrial(trial.id) || isMyTrial(trial.slug));
+
   const closesAtMs = trial ? new Date(trial.closes_at).getTime() : 0;
   const isExpired = trial && Date.now() >= closesAtMs;
   const hasVerdict = trial && (trial.status === "verdict_delivered" || trial.result);
@@ -108,8 +118,10 @@ export default function Trial() {
       else toast.error("Couldn't lock your vote.");
       return;
     }
+    markMyVote(trial.id);
     toast.success("Vote locked.");
     fetchAll();
+
   };
 
   const deliverVerdict = async () => {
