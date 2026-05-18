@@ -262,7 +262,7 @@ export default function Trial() {
             bestEvidence={best?.evidence_text || null}
           />
 
-          <div ref={verdictCardRef}>
+          <div ref={verdictCardRef} className="animate-tilt-in">
             <VerdictCard
               caseTitle={trial.crime_text}
               accused={trial.accused_name}
