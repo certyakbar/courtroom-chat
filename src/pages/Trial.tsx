@@ -15,6 +15,7 @@ import {
 import { pickSentence, tallyVotes, VOTE_LABEL, VOTE_SHORT, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
 import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame, Hash, Link as LinkIcon, Download, Users, CheckCircle2, AlertTriangle } from "lucide-react";
+import { CourtroomStage, type Phase, type Result } from "@/components/courtroom3d/CourtroomStage";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
