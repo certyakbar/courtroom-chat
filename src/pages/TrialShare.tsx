@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Copy, Share2, MessageCircle, ExternalLink, Gavel, Scale } from "lucide-react";
+import { Copy, Share2, MessageCircle, ExternalLink, Gavel, Scale, Link as LinkIcon, Hash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { copyText, nativeShare, trialShareText, whatsappUrl } from "@/lib/share";
+import {
+  copyText,
+  nativeShare,
+  trialMessagePlain,
+  trialMessageWhatsApp,
+  trialMessageDiscord,
+} from "@/lib/share";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string; closes_at: string;
@@ -15,7 +21,11 @@ export default function TrialShare() {
   useEffect(() => {
     (async () => {
       if (!slug) return;
-      const { data } = await supabase.from("instant_trials").select("id,slug,accused_name,crime_text,closes_at").eq("slug", slug).maybeSingle();
+      const { data } = await supabase
+        .from("instant_trials")
+        .select("id,slug,accused_name,crime_text,closes_at")
+        .eq("slug", slug)
+        .maybeSingle();
       setTrial(data as any);
     })();
   }, [slug]);
@@ -29,13 +39,15 @@ export default function TrialShare() {
   }
 
   const url = `${window.location.origin}/t/${trial.slug}`;
-  const shareText = trialShareText(trial.accused_name, trial.crime_text, url);
+  const waMsg = trialMessageWhatsApp(trial.accused_name, trial.crime_text, url);
+  const discordMsg = trialMessageDiscord(trial.accused_name, trial.crime_text, url);
+  const plainMsg = trialMessagePlain(trial.accused_name, trial.crime_text, url);
 
   return (
     <div className="min-h-dvh">
       <main className="px-5 pt-6 pb-20 max-w-md mx-auto">
-        {/* Verdict-style summons card — make it screenshot-worthy */}
-        <div className="relative">
+        {/* Screenshot-friendly summons card */}
+        <div id="summons-card" className="relative">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
             <span className="inline-block px-3 py-1 rounded-full text-[10px] tracking-[0.3em] font-stamp bg-[hsl(var(--stamp))] text-primary-foreground shadow-[var(--shadow-stamp)] uppercase">
               Summons Issued
@@ -50,7 +62,9 @@ export default function TrialShare() {
                 </span>
                 <span className="font-stamp tracking-widest text-[hsl(var(--paper-ink))]">OBJECTION!</span>
               </div>
-              <span className="text-[10px] uppercase tracking-[0.25em] text-[hsl(24_20%_30%)]">Case #{trial.slug.toUpperCase()}</span>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-[hsl(24_20%_30%)]">
+                Case #{trial.slug.toUpperCase()}
+              </span>
             </div>
 
             <div className="gavel-line mt-4" />
@@ -80,8 +94,12 @@ export default function TrialShare() {
           </div>
         </div>
 
-        {/* Headline copy */}
-        <div className="mt-8 text-center">
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">
+          ↑ Screenshot this and send it anywhere.
+        </p>
+
+        {/* Headline */}
+        <div className="mt-7 text-center">
           <h2 className="font-display text-2xl sm:text-3xl leading-tight text-balance">
             Send this to the group chat.
           </h2>
@@ -90,23 +108,33 @@ export default function TrialShare() {
           </p>
         </div>
 
-        {/* Dominant share actions */}
-        <div className="mt-6 space-y-3">
+        {/* Dominant share CTA */}
+        <div className="mt-5 space-y-3">
           <button
-            onClick={() => nativeShare({ title: "OBJECTION!", text: shareText, url }, shareText)}
+            onClick={() => nativeShare({ title: "OBJECTION!", text: plainMsg, url }, plainMsg)}
             className="btn-hero w-full text-lg animate-pulse-glow"
           >
-            <Share2 className="w-5 h-5" /> Send to the chat
+            <Share2 className="w-5 h-5" /> Share to Group Chat
           </button>
-          <a href={whatsappUrl(shareText)} target="_blank" rel="noreferrer" className="btn-gold w-full">
-            <MessageCircle className="w-5 h-5" /> Drop in WhatsApp
-          </a>
-          <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => copyText(shareText, "Summons copied")} className="btn-ghost-court">
-              <Copy className="w-4 h-4" /> Copy summons
+        </div>
+
+        {/* Platform-specific copy buttons */}
+        <div className="mt-5">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2 text-center">
+            Or copy the summons
+          </p>
+          <div className="grid grid-cols-2 gap-2.5">
+            <button onClick={() => copyText(waMsg, "WhatsApp summons copied")} className="btn-ghost-court">
+              <MessageCircle className="w-4 h-4" /> WhatsApp
+            </button>
+            <button onClick={() => copyText(discordMsg, "Discord summons copied")} className="btn-ghost-court">
+              <Hash className="w-4 h-4" /> Discord
+            </button>
+            <button onClick={() => copyText(plainMsg, "Plain summons copied")} className="btn-ghost-court">
+              <Copy className="w-4 h-4" /> Plain text
             </button>
             <button onClick={() => copyText(url, "Link copied")} className="btn-ghost-court">
-              <Copy className="w-4 h-4" /> Copy link
+              <LinkIcon className="w-4 h-4" /> Link
             </button>
           </div>
         </div>
@@ -119,7 +147,10 @@ export default function TrialShare() {
           <ExternalLink className="w-4 h-4" /> Open the courtroom
         </Link>
 
-        <Link to="/" className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+        <Link
+          to="/"
+          className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+        >
           <Gavel className="w-3.5 h-3.5" /> File another case
         </Link>
       </main>
