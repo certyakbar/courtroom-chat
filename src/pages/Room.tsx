@@ -5,7 +5,7 @@ import { Avatar, AvatarPicker } from "@/components/Avatar";
 import { VerdictReveal } from "@/components/VerdictReveal";
 import { VerdictCard } from "@/components/VerdictCard";
 import { supabase } from "@/integrations/supabase/client";
-import { getBrowserToken, getStoredNickname, setStoredNickname, isMyRoom, markMyRoom } from "@/lib/browserToken";
+import { getBrowserToken, getStoredNickname, setStoredNickname, isMyRoom, markMyRoom, setMyPlayerId, getMyPlayerId } from "@/lib/browserToken";
 import { copyText, nativeShare } from "@/lib/share";
 import { pickSentence, tallyVotes, VOTE_LABEL, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
