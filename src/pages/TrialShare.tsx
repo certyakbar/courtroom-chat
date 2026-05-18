@@ -9,6 +9,7 @@ import {
   trialMessageWhatsApp,
   trialMessageDiscord,
 } from "@/lib/share";
+import { CourtroomStage } from "@/components/courtroom3d/CourtroomStage";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string; closes_at: string;
