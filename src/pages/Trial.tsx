@@ -4,7 +4,7 @@ import { CourtHeader } from "@/components/CourtHeader";
 import { VerdictReveal } from "@/components/VerdictReveal";
 import { VerdictCard } from "@/components/VerdictCard";
 import { supabase } from "@/integrations/supabase/client";
-import { getBrowserToken, getStoredNickname, setStoredNickname, isMyTrial, markMyVote, hasMyVote } from "@/lib/browserToken";
+import { getBrowserToken, getStoredNickname, setStoredNickname, isMyTrial, markMyVote } from "@/lib/browserToken";
 import {
   copyText,
   nativeShare,
@@ -14,14 +14,15 @@ import {
 } from "@/lib/share";
 import { pickSentence, tallyVotes, VOTE_LABEL, VOTE_SHORT, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
-import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame, Hash, Link as LinkIcon, Download } from "lucide-react";
+import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame, Hash, Link as LinkIcon, Download, Users, CheckCircle2, AlertTriangle } from "lucide-react";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
   suggested_sentence: string | null; closes_at: string; status: string;
   result: string | null; verdict_sentence: string | null; best_evidence_id: string | null;
 };
-type Vote = { id: string; trial_id: string; voter_nickname: string; vote: string; evidence_text: string | null; created_at: string; };
+type Vote = { id: string; trial_id: string; voter_nickname: string; vote: string; evidence_text: string | null; created_at: string; browser_token: string };
+type Juror = { id: string; trial_id: string; browser_token: string; nickname: string; joined_at: string };
 
 
 const VOTE_OPTIONS: { v: VoteValue; label: string; tag: string; color: string }[] = [
@@ -53,10 +54,12 @@ export default function Trial() {
   const token = useMemo(getBrowserToken, []);
   const [trial, setTrial] = useState<Trial | null>(null);
   const [votes, setVotes] = useState<Vote[]>([]);
+  const [jurors, setJurors] = useState<Juror[]>([]);
   const [nickname, setNickname] = useState(getStoredNickname());
   const [vote, setVote] = useState<VoteValue | null>(null);
   const [evidence, setEvidence] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [joining, setJoining] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [loading, setLoading] = useState(true);
   const verdictCardRef = useRef<HTMLDivElement>(null);
@@ -70,12 +73,20 @@ export default function Trial() {
       .maybeSingle();
     if (!t) { setLoading(false); return; }
     setTrial(t as any);
-    const { data: vs } = await supabase
-      .from("instant_votes")
-      .select("id,trial_id,voter_nickname,vote,evidence_text,created_at")
-      .eq("trial_id", (t as any).id)
-      .order("created_at", { ascending: true });
+    const [{ data: vs }, { data: js }] = await Promise.all([
+      supabase
+        .from("instant_votes")
+        .select("id,trial_id,voter_nickname,vote,evidence_text,created_at,browser_token")
+        .eq("trial_id", (t as any).id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("instant_jurors")
+        .select("id,trial_id,browser_token,nickname,joined_at")
+        .eq("trial_id", (t as any).id)
+        .order("joined_at", { ascending: true }),
+    ]);
     setVotes((vs as any) ?? []);
+    setJurors((js as any) ?? []);
     setLoading(false);
   };
 
@@ -89,15 +100,47 @@ export default function Trial() {
   }, [slug]);
 
   const countdown = useCountdown(trial?.closes_at);
-  const myVote = trial ? (hasMyVote(trial.id) ? votes[votes.length - 1] : undefined) : undefined;
+  const myVote = useMemo(
+    () => votes.find((v) => v.browser_token === token),
+    [votes, token]
+  );
+  const hasJoined = useMemo(
+    () => jurors.some((j) => j.browser_token === token),
+    [jurors, token]
+  );
   const isCreator = trial && (isMyTrial(trial.id) || isMyTrial(trial.slug));
 
   const closesAtMs = trial ? new Date(trial.closes_at).getTime() : 0;
-  const isExpired = trial && Date.now() >= closesAtMs;
-  const hasVerdict = trial && (trial.status === "verdict_delivered" || trial.result);
-  const showReveal = !!hasVerdict || revealing;
+  const isExpired = !!trial && Date.now() >= closesAtMs;
+  const hasVerdict = !!trial && (trial.status === "verdict_delivered" || !!trial.result);
+  const showReveal = hasVerdict || revealing;
+
+  const joinedCount = jurors.length;
+  const votedCount = votes.length;
+  const waitingOn = Math.max(0, joinedCount - votedCount);
+  const juryComplete = joinedCount > 0 && votedCount >= joinedCount;
 
   const tally = useMemo(() => tallyVotes(votes), [votes]);
+
+  const joinJury = async () => {
+    if (!trial) return;
+    const nick = nickname.trim();
+    if (!nick) { toast.error("Pick a nickname to join the jury."); return; }
+    setJoining(true);
+    setStoredNickname(nick);
+    const { error } = await supabase.from("instant_jurors").insert({
+      trial_id: trial.id,
+      browser_token: token,
+      nickname: nick.slice(0, 30),
+    });
+    setJoining(false);
+    if (error && error.code !== "23505") {
+      toast.error("Couldn't join the jury.");
+      return;
+    }
+    toast.success("You're on the jury.");
+    fetchAll();
+  };
 
   const submitVote = async () => {
     if (!trial || !vote) return;
@@ -105,6 +148,16 @@ export default function Trial() {
     if (evidence.length > 80) { toast.error("Evidence max 80 chars."); return; }
     setSubmitting(true);
     setStoredNickname(nickname.trim());
+
+    // Ensure juror row exists (idempotent)
+    if (!hasJoined) {
+      await supabase.from("instant_jurors").insert({
+        trial_id: trial.id,
+        browser_token: token,
+        nickname: nickname.trim().slice(0, 30),
+      });
+    }
+
     const { error } = await supabase.from("instant_votes").insert({
       trial_id: trial.id,
       voter_nickname: nickname.trim().slice(0, 30),
@@ -121,7 +174,6 @@ export default function Trial() {
     markMyVote(trial.id);
     toast.success("Vote locked.");
     fetchAll();
-
   };
 
   const deliverVerdict = async () => {
@@ -264,6 +316,10 @@ export default function Trial() {
     );
   }
 
+  // Jury status copy
+  let juryStatusLine = "Waiting for the jury to arrive.";
+  if (joinedCount > 0 && juryComplete) juryStatusLine = "The jury is complete. Verdict ready.";
+  else if (joinedCount > 0) juryStatusLine = `Waiting on ${waitingOn} juror${waitingOn === 1 ? "" : "s"}.`;
 
   return (
     <div className="min-h-dvh">
@@ -293,13 +349,70 @@ export default function Trial() {
             </h1>
             <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">Charged with</p>
             <p className="mt-1 text-foreground/95 text-balance text-lg font-display">{trial.crime_text}</p>
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-accent" /> Jury: {votes.length}</span>
-            </div>
           </div>
         </div>
 
-        {!myVote ? (
+        {/* Jury status */}
+        <div className="mt-4 court-card p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="w-4 h-4 text-accent" />
+              <span className="font-stamp tracking-wide">
+                Jury: {joinedCount} joined · {votedCount} voted
+              </span>
+            </div>
+            {juryComplete && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+          </div>
+          <p className={`text-xs mt-1.5 ${juryComplete ? "text-emerald-400" : "text-muted-foreground"}`}>
+            {juryStatusLine}
+          </p>
+          {jurors.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {jurors.map((j) => {
+                const voted = votes.some((v) => v.browser_token === j.browser_token);
+                return (
+                  <span
+                    key={j.id}
+                    className={`text-[11px] rounded-full px-2.5 py-1 border ${
+                      voted
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                        : "bg-secondary/60 border-border text-muted-foreground"
+                    }`}
+                  >
+                    {voted ? "✓ " : "… "}{j.nickname}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {!hasJoined && !myVote ? (
+          // Join the jury first
+          <div className="mt-5 space-y-4 animate-rise">
+            <div className="text-center">
+              <p className="font-display text-2xl text-balance">You've been summoned as jury.</p>
+              <p className="text-sm text-muted-foreground mt-1">Join the jury to cast your verdict.</p>
+            </div>
+            <div className="court-card p-4">
+              <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sign as</label>
+              <input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="Your nickname"
+                maxLength={30}
+                className="court-input mt-1.5"
+              />
+            </div>
+            <button
+              onClick={joinJury}
+              disabled={joining || !nickname.trim() || isExpired}
+              className="btn-hero w-full text-lg disabled:opacity-60"
+            >
+              <Users className="w-5 h-5" /> {joining ? "Joining..." : "Join the Jury"}
+            </button>
+          </div>
+        ) : !myVote ? (
           <div className="mt-5 space-y-4 animate-rise">
             <div className="text-center">
               <p className="font-display text-2xl text-balance">Your vote decides this.</p>
@@ -324,27 +437,15 @@ export default function Trial() {
               ))}
             </div>
 
-            <div className="court-card p-4 space-y-3">
-              <div>
-                <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sign as</label>
-                <input
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="Your nickname"
-                  maxLength={30}
-                  className="court-input mt-1.5"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">One-line evidence (optional)</label>
-                <input
-                  value={evidence}
-                  onChange={(e) => setEvidence(e.target.value.slice(0, 80))}
-                  placeholder="Tell the court what you saw."
-                  maxLength={80}
-                  className="court-input mt-1.5"
-                />
-              </div>
+            <div className="court-card p-4">
+              <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">One-line evidence (optional)</label>
+              <input
+                value={evidence}
+                onChange={(e) => setEvidence(e.target.value.slice(0, 80))}
+                placeholder="Tell the court what you saw."
+                maxLength={80}
+                className="court-input mt-1.5"
+              />
             </div>
 
             <button
@@ -363,27 +464,31 @@ export default function Trial() {
             <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Your verdict is locked</p>
             <p className="font-stamp text-3xl mt-2 text-accent">{VOTE_SHORT[myVote.vote as VoteValue]}</p>
             {myVote.evidence_text && <p className="text-sm italic mt-2 text-muted-foreground">"{myVote.evidence_text}"</p>}
-            <p className="text-xs text-muted-foreground mt-4">Waiting for the rest of the jury…</p>
-          </div>
-        )}
-
-        {votes.length > 0 && (
-          <div className="mt-5 court-card p-4">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2">The jury</p>
-            <div className="flex flex-wrap gap-1.5">
-              {votes.map((v) => (
-                <span key={v.id} className="text-xs bg-secondary/60 border border-border rounded-full px-2.5 py-1">
-                  {v.voter_nickname}
-                </span>
-              ))}
-            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              {juryComplete ? "The jury is complete." : "Waiting for the rest of the jury…"}
+            </p>
           </div>
         )}
 
         {(isCreator || isExpired) && (
-          <button onClick={deliverVerdict} className="btn-gold w-full mt-5">
-            <ScrollText className="w-4 h-4" /> Deliver the verdict
-          </button>
+          <div className="mt-5 space-y-2">
+            <button
+              onClick={deliverVerdict}
+              className={juryComplete || isExpired ? "btn-hero w-full text-lg animate-pulse-glow" : "btn-gold w-full"}
+            >
+              <ScrollText className="w-4 h-4" /> Deliver the Verdict
+            </button>
+            {!juryComplete && !isExpired && joinedCount > 0 && (
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
+                <AlertTriangle className="w-3.5 h-3.5" /> Not all jurors have voted yet.
+              </p>
+            )}
+            {joinedCount === 0 && !isExpired && (
+              <p className="text-center text-[11px] text-muted-foreground">
+                No one has joined the jury yet.
+              </p>
+            )}
+          </div>
         )}
       </main>
 
