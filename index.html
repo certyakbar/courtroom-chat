@@ -5,11 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0d14" />
-    <title>OBJECTION! — Put your friends on trial</title>
-    <meta name="description" content="Start a 2-minute private group-chat trial. Send the link, let the jury vote, and drop the dramatic verdict back into the chat." />
-    <meta property="og:title" content="OBJECTION! — Put your friends on trial" />
-    <meta property="og:description" content="A 2-minute animated group-chat trial. Vote Guilty, Not Guilty, or Everyone Is Wrong." />
+    <title>OBJECTION! — You've been summoned</title>
+    <meta name="description" content="The group chat must decide. Start a 2-minute trial, share the link, vote, and drop the verdict back into the chat." />
+    <meta property="og:title" content="You've been summoned to OBJECTION!" />
+    <meta property="og:description" content="The group chat must decide. GUILTY / NOT GUILTY / EVERYONE IS WRONG." />
     <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="You've been summoned to OBJECTION!" />
+    <meta name="twitter:description" content="The group chat must decide." />
+    <!-- TODO: Per-trial dynamic Open Graph previews (accused name, crime, verdict stamp)
+         require server-side rendering or an edge function that returns HTML with
+         per-trial og:title/og:description/og:image. This Vite client app cannot
+         inject per-route og tags that social crawlers (WhatsApp, iMessage, Slack,
+         Discord, LinkedIn) will see, because those crawlers do not execute JS.
+         A Supabase edge function at /og/:slug that returns either pre-rendered
+         HTML or a generated PNG (e.g. via @vercel/og or satori) would unlock this. -->
+    <!-- TODO: Add a generic /og-default.png 1200x630 summons preview image and reference it here:
+         <meta property="og:image" content="/og-default.png" /> -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
