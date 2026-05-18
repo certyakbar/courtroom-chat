@@ -8,7 +8,7 @@ import { getBrowserToken, getStoredNickname, setStoredNickname } from "@/lib/bro
 import { copyText, nativeShare, verdictShareText, whatsappUrl } from "@/lib/share";
 import { pickSentence, tallyVotes, VOTE_LABEL, VOTE_SHORT, type VoteValue } from "@/lib/verdict";
 import { toast } from "sonner";
-import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText } from "lucide-react";
+import { Clock, Gavel, Copy, Share2, MessageCircle, Repeat2, ScrollText, Flame } from "lucide-react";
 
 type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
@@ -18,10 +18,10 @@ type Trial = {
 };
 type Vote = { id: string; trial_id: string; voter_nickname: string; browser_token: string; vote: string; evidence_text: string | null; created_at: string; };
 
-const VOTE_OPTIONS: { v: VoteValue; label: string; color: string }[] = [
-  { v: "guilty", label: "Guilty", color: "from-red-500 to-red-700" },
-  { v: "not_guilty", label: "Not Guilty", color: "from-emerald-500 to-emerald-700" },
-  { v: "everyone_wrong", label: "Everyone Is Wrong", color: "from-amber-400 to-amber-600" },
+const VOTE_OPTIONS: { v: VoteValue; label: string; tag: string; color: string }[] = [
+  { v: "guilty", label: "GUILTY", tag: "Throw the book.", color: "from-red-500 to-red-700" },
+  { v: "not_guilty", label: "NOT GUILTY", tag: "Let them walk.", color: "from-emerald-500 to-emerald-700" },
+  { v: "everyone_wrong", label: "EVERYONE IS WRONG", tag: "Burn it all down.", color: "from-amber-400 to-amber-600" },
 ];
 
 function useCountdown(target?: string) {
