@@ -39,9 +39,9 @@ export default function TrialShare() {
   }
 
   const url = `${window.location.origin}/t/${trial.slug}`;
-  const waMsg = trialMessageWhatsApp(trial.accused_name, trial.crime_text, url);
-  const discordMsg = trialMessageDiscord(trial.accused_name, trial.crime_text, url);
-  const plainMsg = trialMessagePlain(trial.accused_name, trial.crime_text, url);
+  const waMsg = trialMessageWhatsApp(url);
+  const discordMsg = trialMessageDiscord(url);
+  const plainMsg = trialMessagePlain(url);
 
   return (
     <div className="min-h-dvh">
