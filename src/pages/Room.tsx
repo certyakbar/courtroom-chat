@@ -50,8 +50,10 @@ export default function Room() {
   const [avatar, setAvatar] = useState("clown");
   const [joining, setJoining] = useState(false);
 
-  const me = players.find((p) => p.browser_token === token);
-  const isHost = room && room.host_browser_token === token;
+  const myPlayerId = room ? getMyPlayerId(room.id) : null;
+  const me = players.find((p) => p.id === myPlayerId);
+  const isHost = room && isMyRoom(room.code);
+
   const chaosMissionIdx = useMemo(() => {
     if (!round) return 0;
     let h = 0;
