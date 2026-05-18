@@ -27,49 +27,39 @@ export async function nativeShare(opts: { title?: string; text?: string; url?: s
  * ============================================================ */
 
 // Plain — works anywhere, no platform formatting
-export function trialMessagePlain(accused: string, crime: string, url: string) {
+export function trialMessagePlain(url: string) {
   return `⚖️ OBJECTION!
 
-${accused.toUpperCase()} HAS BEEN SUMMONED.
+You've been summoned to vote.
 
-Crime:
-${crime}
+The group chat has a case waiting.
 
-The group chat must decide:
-GUILTY / NOT GUILTY / EVERYONE IS WRONG
-
-Vote here:
+Enter the courtroom:
 ${url}`;
 }
 
 // WhatsApp — supports *bold* and _italic_
-export function trialMessageWhatsApp(accused: string, crime: string, url: string) {
+export function trialMessageWhatsApp(url: string) {
   return `⚖️ *OBJECTION!*
 
-*${accused.toUpperCase()} HAS BEEN SUMMONED.*
+*You've been summoned to vote.*
 
-_Crime:_
-${crime}
+The group chat has a case waiting.
 
-The group chat must decide:
-*GUILTY* / *NOT GUILTY* / *EVERYONE IS WRONG*
-
-Vote here:
+Enter the courtroom:
 ${url}`;
 }
 
 // Discord — supports **bold**, *italic*, > quotes, and embedded link suppression with <url>
-export function trialMessageDiscord(accused: string, crime: string, url: string) {
+export function trialMessageDiscord(url: string) {
   return `⚖️ **OBJECTION!**
 
-**${accused.toUpperCase()} HAS BEEN SUMMONED.**
+**You've been summoned to vote.**
 
-> *Crime:* ${crime}
+The group chat has a case waiting.
 
-The group chat must decide:
-**GUILTY** / **NOT GUILTY** / **EVERYONE IS WRONG**
-
-Vote here: ${url}`;
+Enter the courtroom:
+${url}`;
 }
 
 /* ============================================================
