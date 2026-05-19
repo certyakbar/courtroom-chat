@@ -40,12 +40,13 @@ const TONE: Record<VoteValue, { bg: string; glow: string; stampColor: string; }>
   },
 };
 
-export function VerdictReveal({ counts, total, winner, confidence, caseTitle, accused, sentence, bestEvidence, onDone }: Props) {
-  const [step, setStep] = useState(0);
+export function VerdictReveal({ counts, total, winner, confidence, caseTitle, accused, sentence, bestEvidence, onDone, settled }: Props) {
+  const [step, setStep] = useState(settled ? 5 : 0);
   // 0: dark, 1: jury reached verdict, 2: bars + accused shake, 3: gavel falls, 4: stamp + shake, 5: sentence/evidence
   const [shake, setShake] = useState(false);
 
   useEffect(() => {
+    if (settled) { setStep(5); return; }
     const timers = [
       setTimeout(() => setStep(1), 250),
       setTimeout(() => setStep(2), 1400),
@@ -56,7 +57,7 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
       setTimeout(() => onDone?.(), 5000),
     ];
     return () => timers.forEach(clearTimeout);
-  }, [onDone]);
+  }, [onDone, settled]);
 
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   const tone = TONE[winner];
@@ -64,24 +65,24 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
   const isChaos = winner === "everyone_wrong";
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl border border-border bg-[hsl(220_30%_4%)] p-6 sm:p-10 min-h-[640px] flex flex-col grain perspective-stage ${shake ? "animate-screen-shake" : ""}`}>
+    <div className={`relative overflow-hidden rounded-3xl border border-border bg-[hsl(220_30%_4%)] ${settled ? "p-5 sm:p-6 min-h-0" : "p-6 sm:p-10 min-h-[640px]"} flex flex-col grain perspective-stage transition-all duration-500 ${shake ? "animate-screen-shake" : ""}`}>
       <div className={`absolute inset-0 pointer-events-none ${tone.bg}`} />
       {step >= 4 && (
-        <div className={`absolute inset-0 pointer-events-none ${tone.glow} animate-rise`} />
+        <div className={`absolute inset-0 pointer-events-none ${tone.glow} ${settled ? "" : "animate-rise"}`} />
       )}
-      <div className="spotlight-layer animate-spotlight" />
+      {!settled && <div className="spotlight-layer animate-spotlight" />}
 
       <div className="relative z-10 flex-1 flex flex-col">
         <p className="text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground">Case</p>
-        <h2 className="text-center font-display text-xl sm:text-2xl mt-1 text-balance">{caseTitle}</h2>
+        <h2 className={`text-center font-display ${settled ? "text-base sm:text-lg" : "text-xl sm:text-2xl"} mt-1 text-balance`}>{caseTitle}</h2>
         <p className="text-center text-sm text-muted-foreground mt-1">
           Accused:{" "}
-          <span className={`text-foreground font-medium inline-block ${step >= 3 ? "animate-shake text-primary" : ""}`}>
+          <span className={`text-foreground font-medium inline-block ${step >= 3 && !settled ? "animate-shake text-primary" : "text-primary"}`}>
             {accused}
           </span>
         </p>
 
-        <div className="flex-1 flex flex-col items-center justify-center mt-6 gap-6">
+        <div className={`flex-1 flex flex-col items-center justify-center ${settled ? "mt-4 gap-3" : "mt-6 gap-6"}`}>
           {step >= 1 && step < 3 && (
             <p className="font-display text-2xl sm:text-3xl text-center text-foreground/90 animate-rise px-4">
               The jury has reached a verdict<span className="animate-pulse">…</span>
