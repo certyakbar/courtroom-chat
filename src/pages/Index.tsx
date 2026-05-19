@@ -130,7 +130,7 @@ export default function Index() {
         </section>
 
         <section
-          className={`mt-7 paper rounded-3xl p-5 sm:p-6 animate-rise relative transition-all duration-500 ${
+          className={`mt-7 court-card p-5 sm:p-6 animate-rise relative transition-all duration-500 ${
             formReady ? "shadow-[var(--shadow-stamp)] ring-1 ring-[hsl(var(--stamp)/0.4)]" : ""
           } ${loading ? "animate-pulse-glow" : ""}`}
         >
