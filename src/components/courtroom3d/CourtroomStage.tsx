@@ -4,7 +4,7 @@ import { hasWebGL, prefersReducedMotion } from "./webglSupport";
 
 export type Phase = "summons" | "voting" | "waiting" | "reveal";
 export type Result = "guilty" | "not_guilty" | "everyone_wrong" | null;
-export type StageVariant = "ambient" | "hero" | "waiting" | "reveal";
+export type StageVariant = "ambient" | "filing" | "hero" | "waiting" | "reveal";
 
 export interface CourtroomStageProps {
   phase: Phase;
