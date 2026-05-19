@@ -224,18 +224,26 @@ export default function Trial() {
   const stageResult: Result = showReveal
     ? ((trial.result as Result) || (tally.winner as Result))
     : null;
+  const stageVariant: "ambient" | "waiting" | "reveal" = showReveal
+    ? "reveal"
+    : myVote
+    ? "waiting"
+    : "ambient";
 
   const Stage = (
-    <CourtroomStage
-      phase={stagePhase}
-      result={stageResult}
-      joinedCount={joinedCount}
-      votedCount={votedCount}
-      juryComplete={juryComplete}
-      countdownUrgent={countdown.urgent}
-      countdownCritical={countdown.critical}
-      className="fixed inset-0 z-0"
-    />
+    <div className="pointer-events-none absolute -inset-x-8 sm:-inset-x-20 top-0 bottom-0 z-0">
+      <CourtroomStage
+        phase={stagePhase}
+        result={stageResult}
+        variant={stageVariant}
+        joinedCount={joinedCount}
+        votedCount={votedCount}
+        juryComplete={juryComplete}
+        countdownUrgent={countdown.urgent}
+        countdownCritical={countdown.critical}
+        className="absolute inset-0"
+      />
+    </div>
   );
 
   if (showReveal) {
