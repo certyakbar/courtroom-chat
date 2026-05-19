@@ -361,8 +361,10 @@ export default function Trial() {
 
   // Jury status copy
   let juryStatusLine = "Waiting for the jury to arrive.";
-  if (joinedCount > 0 && juryComplete) juryStatusLine = "The jury is complete. Verdict ready.";
+  if (joinedCount > 0 && juryComplete) juryStatusLine = "Jury complete. Verdict incoming.";
   else if (joinedCount > 0) juryStatusLine = `Waiting on ${waitingOn} juror${waitingOn === 1 ? "" : "s"}.`;
+
+  const locked = !!myVote;
 
   return (
     <div className={`min-h-dvh relative ${countdown.critical ? "animate-screen-shake" : ""}`}>
@@ -370,13 +372,23 @@ export default function Trial() {
       <main className="relative z-10 px-5 pb-16 max-w-md mx-auto perspective-stage">
         {Stage}
         <div className="relative z-10">
-        {/* Case header — dramatic */}
-        <div className={`court-card p-5 relative overflow-hidden ${countdown.urgent ? "animate-breathe" : ""}`}>
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
-          <div className="spotlight-layer animate-spotlight" />
+        {/* Case header — compresses after vote so the live court takes focus */}
+        <div
+          className={`court-card relative overflow-hidden transition-all duration-500 ${
+            locked ? "p-3.5" : "p-5"
+          } ${countdown.urgent && !locked ? "animate-breathe" : ""}`}
+        >
+          {!locked && (
+            <>
+              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
+              <div className="spotlight-layer animate-spotlight" />
+            </>
+          )}
           <div className="relative">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] uppercase tracking-[0.35em] text-accent font-stamp">⚖ Court in session</p>
+              <p className="text-[10px] uppercase tracking-[0.35em] text-accent font-stamp">
+                {locked ? "⚖ In session" : "⚖ Court in session"}
+              </p>
               <span
                 className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
                   countdown.closed
@@ -391,23 +403,46 @@ export default function Trial() {
                 <Clock className="w-3.5 h-3.5" /> {countdown.label}
               </span>
             </div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">The accused</p>
-            <h1 className="font-display text-4xl mt-1 text-balance leading-tight">
-              <span className="text-primary">{trial.accused_name}</span>
-            </h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">Charged with</p>
-            <p className="mt-1 text-foreground/95 text-balance text-lg font-display">{trial.crime_text}</p>
-            {countdown.critical && !countdown.closed && (
-              <p className="text-[11px] mt-3 text-[hsl(0_95%_78%)] uppercase tracking-[0.25em] font-stamp">Final votes now.</p>
-            )}
-            {countdown.urgent && !countdown.critical && !countdown.closed && (
-              <p className="text-[11px] mt-3 text-[hsl(0_85%_72%)] uppercase tracking-[0.25em]">Court is closing soon.</p>
+            {locked ? (
+              <div className="mt-2 flex items-baseline gap-2 min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground shrink-0">Accused</p>
+                <h1 className="font-display text-xl text-primary truncate">{trial.accused_name}</h1>
+              </div>
+            ) : (
+              <>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">The accused</p>
+                <h1 className="font-display text-4xl mt-1 text-balance leading-tight">
+                  <span className="text-primary">{trial.accused_name}</span>
+                </h1>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-4">Charged with</p>
+                <p className="mt-1 text-foreground/95 text-balance text-lg font-display">{trial.crime_text}</p>
+                {countdown.critical && !countdown.closed && (
+                  <p className="text-[11px] mt-3 text-[hsl(0_95%_78%)] uppercase tracking-[0.25em] font-stamp">Final votes now.</p>
+                )}
+                {countdown.urgent && !countdown.critical && !countdown.closed && (
+                  <p className="text-[11px] mt-3 text-[hsl(0_85%_72%)] uppercase tracking-[0.25em]">Court is closing soon.</p>
+                )}
+              </>
             )}
           </div>
         </div>
 
-        {/* Jury status */}
-        <div className="mt-4 court-card p-4">
+        {/* Locked stamp — the impact moment right after voting */}
+        {locked && (
+          <div className="mt-3 text-center animate-rise">
+            <div className="inline-flex flex-col items-center gap-1">
+              <div className="stamp font-stamp text-xl sm:text-2xl px-4 py-1.5 animate-stamp">
+                {VOTE_SHORT[myVote!.vote as VoteValue].toUpperCase()} — LOCKED
+              </div>
+              {myVote!.evidence_text && (
+                <p className="text-xs italic text-muted-foreground/90 mt-1.5 max-w-xs">"{myVote!.evidence_text}"</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Jury status — the live courtroom, foregrounded after vote */}
+        <div className={`mt-3 court-card p-4 ${locked ? "ring-1 ring-accent/30" : ""}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm">
               <Users className="w-4 h-4 text-accent" />
@@ -440,14 +475,19 @@ export default function Trial() {
               })}
             </div>
           )}
+          {locked && !juryComplete && (
+            <p key={microIdx} className="text-xs italic text-muted-foreground/80 mt-3 text-center animate-rise">
+              {MICROCOPY[microIdx % MICROCOPY.length]}
+            </p>
+          )}
         </div>
 
 
-        {!myVote ? (
+        {!myVote && (
           <div className="mt-5 space-y-4 animate-rise">
             <div className="text-center">
               <p className="font-display text-2xl text-balance">Your vote decides this.</p>
-              <p className="text-sm text-muted-foreground mt-1">Pick a verdict. Lock it in. Under 15 seconds.</p>
+              <p className="text-sm text-muted-foreground mt-1">Pick a verdict. Lock it in.</p>
             </div>
 
             <div className="court-card p-4">
@@ -470,11 +510,11 @@ export default function Trial() {
                     key={o.v}
                     type="button"
                     onClick={() => setVote(o.v)}
-                    className={`text-left rounded-2xl px-5 py-4 border-2 tilt-press ${
+                    className={`text-left rounded-2xl px-5 py-4 border-2 tilt-press transition-all ${
                       selected
-                        ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)] tilt-press-selected animate-pulse-gold"
+                        ? "border-accent bg-gradient-to-r " + o.color + " text-white shadow-[var(--shadow-gold)] tilt-press-selected animate-pulse-gold scale-[1.02]"
                         : dimmed
-                        ? "border-border bg-card opacity-55 hover:opacity-80"
+                        ? "border-border bg-card opacity-45 scale-[0.97] hover:opacity-75"
                         : "border-border bg-card hover:bg-secondary/70 active:scale-[0.99]"
                     }`}
                   >
@@ -499,31 +539,10 @@ export default function Trial() {
             <button
               onClick={submitVote}
               disabled={submitting || !vote || !nickname.trim() || isExpired}
-              className={`btn-hero w-full text-lg disabled:opacity-60 ${vote && !submitting ? "animate-pulse-glow" : ""}`}
+              className={`btn-hero w-full text-lg disabled:opacity-60 transition-all ${vote && !submitting ? "animate-pulse-glow scale-[1.02]" : ""}`}
             >
-              <Gavel className="w-5 h-5" /> {submitting ? "Locking..." : vote ? "Lock my verdict" : "Choose a verdict"}
+              <Gavel className={`w-5 h-5 ${submitting ? "animate-gavel-slam" : ""}`} /> {submitting ? "Locking..." : vote ? "Lock my verdict" : "Choose a verdict"}
             </button>
-            <p className="text-center text-[11px] text-muted-foreground">
-              One vote per device. The jury is watching.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-5 court-card p-5 animate-rise text-center relative overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_hsl(var(--stamp)/0.12),_transparent_70%)]" />
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground relative">Your verdict is locked</p>
-            <p className="font-stamp text-3xl mt-2 text-accent relative animate-rise">{VOTE_SHORT[myVote.vote as VoteValue]}</p>
-            {myVote.evidence_text && <p className="text-sm italic mt-2 text-muted-foreground relative">"{myVote.evidence_text}"</p>}
-            <p className="text-xs text-muted-foreground mt-4 relative">
-              Jury: {joinedCount} joined · {votedCount} voted
-            </p>
-            <p className={`text-sm mt-1 relative ${juryComplete ? "text-emerald-400 font-medium" : "text-foreground/80"}`}>
-              {juryComplete ? "The jury is complete. Verdict incoming." : `Waiting on ${waitingOn} juror${waitingOn === 1 ? "" : "s"}.`}
-            </p>
-            {!juryComplete && (
-              <p key={microIdx} className="text-xs italic text-muted-foreground/80 mt-3 relative animate-rise">
-                {MICROCOPY[microIdx % MICROCOPY.length]}
-              </p>
-            )}
           </div>
         )}
 
