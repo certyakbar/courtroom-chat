@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
-import { Gavel, Users, KeyRound, Sparkles, Repeat2 } from "lucide-react";
+import { Gavel, Users, KeyRound, Repeat2 } from "lucide-react";
 import { CourtHeader } from "@/components/CourtHeader";
 import { CourtroomStage } from "@/components/courtroom3d/CourtroomStage";
 import { supabase } from "@/integrations/supabase/client";
@@ -225,35 +225,7 @@ export default function Index() {
           </form>
         </section>
 
-        <section className="mt-10">
-          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-3">How it works</p>
-          <ol className="space-y-2">
-            {[
-              "File the case.",
-              "Send the summons.",
-              "The group decides.",
-            ].map((s, i) => (
-              <li key={i} className="flex items-start gap-3 court-card p-3">
-                <span className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-accent to-[hsl(var(--gold-deep))] text-accent-foreground font-bold flex items-center justify-center text-sm">
-                  {i + 1}
-                </span>
-                <span className="text-sm pt-1">{s}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="mt-8 court-card p-4">
-          <div className="flex items-center gap-2 text-accent">
-            <Sparkles className="w-4 h-4" />
-            <p className="text-xs uppercase tracking-[0.25em]">Coming later</p>
-          </div>
-          <p className="text-sm mt-2 text-muted-foreground">
-            Premium case packs · Custom verdict card themes · Saved group history · Big-screen host view · Community court packs.
-          </p>
-        </section>
-
-        <p className="mt-8 text-center text-xs text-muted-foreground">
+        <p className="mt-10 text-center text-xs text-muted-foreground">
           Private group court. Keep it in the group. No private details, threats, or serious claims.{" "}
           <Link to="/about" className="underline underline-offset-2">Read the rules</Link>.
         </p>

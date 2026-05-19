@@ -447,15 +447,15 @@ export default function Trial() {
           <div className="mt-5 space-y-4 animate-rise">
             <div className="text-center">
               <p className="font-display text-2xl text-balance">Your vote decides this.</p>
-              <p className="text-sm text-muted-foreground mt-1">Sign in, tap a verdict, lock it. Under 15 seconds.</p>
+              <p className="text-sm text-muted-foreground mt-1">Pick a verdict. Lock it in. Under 15 seconds.</p>
             </div>
 
             <div className="court-card p-4">
-              <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sign as</label>
+              <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Your nickname</label>
               <input
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="Your nickname"
+                placeholder="What the jury should call you"
                 maxLength={30}
                 className="court-input mt-1.5"
               />
