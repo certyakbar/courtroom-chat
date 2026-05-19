@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
-import { Gavel, Users, KeyRound, Sparkles, Repeat2 } from "lucide-react";
+import { Gavel, Users, KeyRound, Repeat2 } from "lucide-react";
 import { CourtHeader } from "@/components/CourtHeader";
 import { CourtroomStage } from "@/components/courtroom3d/CourtroomStage";
 import { supabase } from "@/integrations/supabase/client";
