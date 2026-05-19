@@ -92,7 +92,11 @@ export default function Index() {
     nav(`/r/${c}`);
   };
 
-  const stageVariant: "ambient" | "hero" = loading || formReady ? "hero" : "ambient";
+  const stageVariant: "ambient" | "filing" | "hero" = loading || formReady
+    ? "hero"
+    : accusedDone || crimeDone
+    ? "filing"
+    : "ambient";
 
   return (
     <div className="min-h-dvh relative overflow-hidden">
