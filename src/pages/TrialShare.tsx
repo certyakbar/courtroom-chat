@@ -15,12 +15,12 @@ type Trial = {
   id: string; slug: string; accused_name: string; crime_text: string;
   closes_at: string; status: string;
 };
+type JurorLite = { id: string; nickname: string; voted: boolean };
 
 export default function TrialShare() {
   const { slug } = useParams();
   const [trial, setTrial] = useState<Trial | null>(null);
-  const [joined, setJoined] = useState(0);
-  const [voted, setVoted] = useState(0);
+  const [jurors, setJurors] = useState<JurorLite[]>([]);
 
   // Initial trial load
   useEffect(() => {
@@ -35,27 +35,40 @@ export default function TrialShare() {
     })();
   }, [slug]);
 
-  // Poll live court status
+  // Poll live court status — jurors + votes + trial status
   useEffect(() => {
     if (!trial?.id) return;
     let cancelled = false;
     const tick = async () => {
-      const [{ count: jCount }, { count: vCount }, { data: t }] = await Promise.all([
-        supabase.from("instant_jurors").select("id", { count: "exact", head: true }).eq("trial_id", trial.id),
-        supabase.from("instant_votes").select("id", { count: "exact", head: true }).eq("trial_id", trial.id),
+      const [{ data: js }, { data: vs }, { data: t }] = await Promise.all([
+        supabase.from("instant_jurors")
+          .select("id,browser_token,nickname,joined_at")
+          .eq("trial_id", trial.id)
+          .order("joined_at", { ascending: true }),
+        supabase.from("instant_votes")
+          .select("browser_token")
+          .eq("trial_id", trial.id),
         supabase.from("instant_trials").select("status").eq("id", trial.id).maybeSingle(),
       ]);
       if (cancelled) return;
-      setJoined(jCount ?? 0);
-      setVoted(vCount ?? 0);
+      const votedTokens = new Set(((vs as any[]) ?? []).map((v) => v.browser_token));
+      const mapped: JurorLite[] = ((js as any[]) ?? []).map((j) => ({
+        id: j.id,
+        nickname: j.nickname,
+        voted: votedTokens.has(j.browser_token),
+      }));
+      setJurors(mapped);
       if (t && (t as any).status !== trial.status) {
         setTrial({ ...trial, status: (t as any).status });
       }
     };
     tick();
-    const id = setInterval(tick, 4000);
+    const id = setInterval(tick, 3500);
     return () => { cancelled = true; clearInterval(id); };
   }, [trial?.id]);
+
+  const joined = jurors.length;
+  const voted = jurors.filter((j) => j.voted).length;
 
   if (!trial) {
     return (
@@ -133,6 +146,29 @@ export default function TrialShare() {
         <p className="mt-1.5 text-center text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
           {statusLine}
         </p>
+
+        {/* Live jurors arriving — make the court feel alive */}
+        {jurors.length > 0 && !verdictDelivered && (
+          <div className="mt-4 court-card p-3 perspective-stage">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2 text-center">
+              The jury is arriving
+            </p>
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {jurors.slice(-12).map((j) => (
+                <span
+                  key={j.id}
+                  className={`text-[11px] rounded-full px-2.5 py-1 border animate-chip-pop ${
+                    j.voted
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 animate-chip-lock shadow-[0_4px_14px_-4px_hsl(142_70%_45%/0.45)]"
+                      : "bg-secondary/60 border-border text-muted-foreground animate-breathe"
+                  }`}
+                >
+                  {j.voted ? "✓ " : "… "}{j.nickname}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Screenshot-friendly summons card — generic */}
         <div id="summons-card" className="relative mt-5">

@@ -37,6 +37,18 @@ type VariantCfg = {
 
 function variantConfig(v: StageVariant): VariantCfg {
   switch (v) {
+    case "filing":
+      return {
+        cameraPos: [0, 1.8, 5.4],
+        cameraTarget: [0, 1.4, -2],
+        fov: 32,
+        fogNear: 3.8,
+        fogFar: 10,
+        showBench: false,
+        showGavel: false,
+        showPaper: true,
+        showJurors: false,
+      };
     case "hero":
       return {
         cameraPos: [0, 2.0, 6.5],
