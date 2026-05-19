@@ -118,13 +118,15 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
           )}
 
           {step >= 4 && (
-            <div className="flex flex-col items-center gap-5 animate-rise">
-              <div className={`stamp font-stamp text-5xl sm:text-7xl animate-stamp px-6 py-4 leading-none ${tone.stampColor} ${isGuilty ? "" : ""} ${isChaos ? "rotate-3" : ""}`}>
+            <div className={`flex flex-col items-center ${settled ? "gap-2" : "gap-5 animate-rise"}`}>
+              <div className={`stamp font-stamp ${settled ? "text-4xl sm:text-5xl px-4 py-2" : "text-5xl sm:text-7xl animate-stamp px-6 py-4"} leading-none ${tone.stampColor} ${isChaos ? "rotate-3" : ""}`}>
                 {VOTE_LABEL[winner]}
               </div>
-              <p className="font-display text-lg sm:text-xl text-foreground/90 text-center text-balance">
-                {DRAMATIC_TAGS[winner]}
-              </p>
+              {!settled && (
+                <p className="font-display text-lg sm:text-xl text-foreground/90 text-center text-balance">
+                  {DRAMATIC_TAGS[winner]}
+                </p>
+              )}
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Jury confidence <span className="text-accent font-semibold">{confidence}%</span>
               </p>
