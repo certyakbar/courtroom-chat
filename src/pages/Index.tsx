@@ -82,11 +82,27 @@ export default function Index() {
     nav(`/r/${c}`);
   };
 
+  const formReady = accused.trim().length > 0 && crime.trim().length >= 3;
+  const stageVariant: "ambient" | "hero" = loading || formReady ? "hero" : "ambient";
+
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh relative overflow-hidden">
       <CourtHeader />
 
-      <main className="px-5 pb-16 max-w-md mx-auto">
+      <main className="relative px-5 pb-16 max-w-md mx-auto">
+        {/* Cinematic courtroom stage behind the filing */}
+        <div className="pointer-events-none absolute -inset-x-8 sm:-inset-x-20 top-0 bottom-0 z-0">
+          <CourtroomStage
+            phase="summons"
+            variant={stageVariant}
+            joinedCount={0}
+            votedCount={loading ? 1 : 0}
+            juryComplete={false}
+            className="absolute inset-0"
+          />
+        </div>
+
+        <div className="relative z-10">
         <section className="pt-4">
           {revengeOf ? (
             <>
@@ -97,34 +113,44 @@ export default function Index() {
                 <span className="text-primary">{revengeOf}</span> is appealing the verdict.
               </h1>
               <p className="mt-3 text-muted-foreground text-balance">
-                File the counter-case. The group chat will decide this one too.
+                File the counter-case. The group decides this one too.
               </p>
             </>
           ) : (
             <>
               <p className="text-[11px] uppercase tracking-[0.3em] text-accent">⚖ Court is in session</p>
               <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] mt-2 text-balance">
-                Put your friends <span className="text-primary">on trial.</span>
+                File a case against <span className="text-primary">the group chat.</span>
               </h1>
               <p className="mt-3 text-muted-foreground text-balance">
-                Start a private group-chat trial in seconds. Send the link, let the jury vote, and drop the verdict back into the chat.
+                Private courtroom. Summon the jury, watch the verdict drop live.
               </p>
             </>
           )}
         </section>
 
-        <section className="mt-7 court-card p-5 animate-rise">
-          <div className="space-y-4">
-            <Field label="Accused" hint="No full real names. Tiny unserious crimes only.">
+        <section
+          className={`mt-7 paper rounded-3xl p-5 sm:p-6 animate-rise relative transition-all duration-500 ${
+            formReady ? "shadow-[var(--shadow-stamp)] ring-1 ring-[hsl(var(--stamp)/0.4)]" : ""
+          } ${loading ? "animate-pulse-glow" : ""}`}
+        >
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] tracking-[0.3em] font-stamp bg-[hsl(var(--stamp))] text-primary-foreground shadow-[var(--shadow-stamp)] uppercase">
+              {loading ? "Filing case…" : "Case File"}
+            </span>
+          </div>
+
+          <div className="space-y-4 mt-2">
+            <Field label="Who / what is on trial?" hint="Nicknames work best. Keep it private.">
               <input
                 value={accused}
                 onChange={(e) => setAccused(e.target.value)}
-                placeholder="e.g. Marcus"
+                placeholder="e.g. Marcus, the flat, someone, the group chat"
                 maxLength={40}
                 className="court-input"
               />
             </Field>
-            <Field label={revengeOf ? "What are they appealing?" : "What did they do?"}>
+            <Field label={revengeOf ? "What are they appealing?" : "What's the charge?"}>
               <textarea
                 value={crime}
                 onChange={(e) => setCrime(e.target.value)}
@@ -148,7 +174,7 @@ export default function Index() {
                 className="court-input"
               />
             </Field>
-            <Field label="Trial length">
+            <Field label="How long should court stay open?">
               <div className="grid grid-cols-4 gap-2">
                 {(["2m", "10m", "1h", "24h"] as const).map((opt) => (
                   <button
@@ -167,16 +193,23 @@ export default function Index() {
               </div>
             </Field>
 
-            <button onClick={summon} disabled={loading} className="btn-hero w-full text-lg animate-pulse-glow disabled:opacity-60">
-              <Gavel className="w-5 h-5" />
-              {loading ? "Summoning..." : revengeOf ? "File the revenge case" : "Summon the Jury"}
+            <button
+              onClick={summon}
+              disabled={loading}
+              className={`btn-hero w-full text-lg disabled:opacity-60 transition-all ${
+                formReady ? "animate-pulse-glow scale-[1.01]" : ""
+              }`}
+            >
+              <Gavel className={`w-5 h-5 ${loading ? "animate-gavel-slam" : ""}`} />
+              {loading ? "Summoning…" : revengeOf ? "File Revenge Case" : "Summon the Jury"}
             </button>
           </div>
         </section>
 
-        <section className="mt-5 grid grid-cols-2 gap-3">
-          <Link to="/party/new" className="btn-gold text-sm">
-            <Users className="w-4 h-4" /> Party Court
+        {/* Secondary: Party Court + join code, visually quieter */}
+        <section className="mt-4 grid grid-cols-2 gap-2.5 opacity-90">
+          <Link to="/party/new" className="btn-ghost-court text-xs">
+            <Users className="w-3.5 h-3.5" /> Party Court
           </Link>
           <form onSubmit={join} className="flex">
             <input
@@ -184,10 +217,10 @@ export default function Index() {
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder="CODE"
               maxLength={6}
-              className="court-input rounded-r-none uppercase tracking-widest text-center"
+              className="court-input rounded-r-none uppercase tracking-widest text-center text-xs"
             />
             <button className="btn-ghost-court rounded-l-none px-3" type="submit" aria-label="Join with code">
-              <KeyRound className="w-4 h-4" />
+              <KeyRound className="w-3.5 h-3.5" />
             </button>
           </form>
         </section>
@@ -196,9 +229,9 @@ export default function Index() {
           <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-3">How it works</p>
           <ol className="space-y-2">
             {[
-              "File a tiny case.",
-              "Send it to the chat.",
-              "Share the verdict.",
+              "File the case.",
+              "Send the summons.",
+              "The group decides.",
             ].map((s, i) => (
               <li key={i} className="flex items-start gap-3 court-card p-3">
                 <span className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-accent to-[hsl(var(--gold-deep))] text-accent-foreground font-bold flex items-center justify-center text-sm">
@@ -221,8 +254,10 @@ export default function Index() {
         </section>
 
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          Tiny unserious crimes only. <Link to="/about" className="underline underline-offset-2">Read the rules</Link>.
+          Private group court. Keep it in the group. No private details, threats, or serious claims.{" "}
+          <Link to="/about" className="underline underline-offset-2">Read the rules</Link>.
         </p>
+        </div>
       </main>
 
       <style>{`
