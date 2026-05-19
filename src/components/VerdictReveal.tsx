@@ -13,6 +13,7 @@ interface Props {
   sentence: string;
   bestEvidence?: string | null;
   onDone?: () => void;
+  settled?: boolean;
 }
 
 const DRAMATIC_TAGS: Record<VoteValue, string> = {
