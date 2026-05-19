@@ -368,9 +368,10 @@ export default function Trial() {
 
   return (
     <div className={`min-h-dvh relative ${countdown.critical ? "animate-screen-shake" : ""}`}>
-      {Stage}
       <CourtHeader />
       <main className="relative z-10 px-5 pb-16 max-w-md mx-auto perspective-stage">
+        {Stage}
+        <div className="relative z-10">
         {/* Case header — dramatic */}
         <div className={`court-card p-5 relative overflow-hidden ${countdown.urgent ? "animate-breathe" : ""}`}>
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
