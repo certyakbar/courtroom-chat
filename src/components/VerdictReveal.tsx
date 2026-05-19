@@ -134,10 +134,10 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
           )}
 
           {step >= 5 && (
-            <div className="w-full max-w-md space-y-3 animate-tilt-in">
-              <div className="court-card p-4">
+            <div className={`w-full max-w-md space-y-2 ${settled ? "" : "animate-tilt-in"}`}>
+              <div className={`court-card ${settled ? "p-3" : "p-4"}`}>
                 <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sentence</p>
-                <p className="font-display text-lg mt-1 text-balance">{sentence}</p>
+                <p className={`font-display ${settled ? "text-base" : "text-lg"} mt-1 text-balance`}>{sentence}</p>
               </div>
               {bestEvidence && (
                 <div className="paper rounded-2xl p-4 animate-rise">
