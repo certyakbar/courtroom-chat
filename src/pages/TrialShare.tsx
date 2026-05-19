@@ -162,6 +162,7 @@ export default function TrialShare() {
         >
           <Gavel className="w-3.5 h-3.5" /> File another case
         </Link>
+        </div>
       </main>
     </div>
   );
