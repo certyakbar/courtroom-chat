@@ -298,6 +298,7 @@ export default function Trial() {
             sentence={sentence}
             bestEvidence={best?.evidence_text || null}
             onDone={() => setRevealComplete(true)}
+            onStepChange={setRevealStep}
             settled={revealComplete}
           />
 
