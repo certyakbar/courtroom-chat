@@ -286,16 +286,26 @@ export default function Trial() {
         <main className="relative z-10 px-5 pb-10 max-w-md mx-auto">
           {Stage}
           <div className="relative z-10 space-y-3">
-          <VerdictReveal
-            counts={tally.counts}
-            total={tally.total}
-            winner={result}
-            confidence={confidence}
-            caseTitle={trial.crime_text}
-            accused={trial.accused_name}
-            sentence={sentence}
-            bestEvidence={best?.evidence_text || null}
-          />
+          {!revealComplete && (
+            <VerdictReveal
+              counts={tally.counts}
+              total={tally.total}
+              winner={result}
+              confidence={confidence}
+              caseTitle={trial.crime_text}
+              accused={trial.accused_name}
+              sentence={sentence}
+              bestEvidence={best?.evidence_text || null}
+              onDone={() => setRevealComplete(true)}
+            />
+          )}
+
+          {revealComplete && (
+            <div className="text-center animate-rise">
+              <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">Verdict delivered</p>
+              <p className="font-stamp text-2xl mt-1 text-accent">{VOTE_LABEL[result]}</p>
+            </div>
+          )}
 
           <div ref={verdictCardRef} className="animate-tilt-in">
             <VerdictCard
