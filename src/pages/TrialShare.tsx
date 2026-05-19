@@ -147,6 +147,29 @@ export default function TrialShare() {
           {statusLine}
         </p>
 
+        {/* Live jurors arriving — make the court feel alive */}
+        {jurors.length > 0 && !verdictDelivered && (
+          <div className="mt-4 court-card p-3 perspective-stage">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2 text-center">
+              The jury is arriving
+            </p>
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {jurors.slice(-12).map((j) => (
+                <span
+                  key={j.id}
+                  className={`text-[11px] rounded-full px-2.5 py-1 border animate-chip-pop ${
+                    j.voted
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 animate-chip-lock shadow-[0_4px_14px_-4px_hsl(142_70%_45%/0.45)]"
+                      : "bg-secondary/60 border-border text-muted-foreground animate-breathe"
+                  }`}
+                >
+                  {j.voted ? "✓ " : "… "}{j.nickname}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Screenshot-friendly summons card — generic */}
         <div id="summons-card" className="relative mt-5">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
