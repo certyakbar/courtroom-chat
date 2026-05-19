@@ -583,6 +583,7 @@ export default function Trial() {
             <p className="text-xs text-muted-foreground">Time's up. Waiting for the host to drop the verdict.</p>
           </div>
         )}
+        </div>
       </main>
 
       <style>{`
