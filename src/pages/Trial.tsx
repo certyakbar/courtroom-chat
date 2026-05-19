@@ -238,6 +238,7 @@ export default function Trial() {
         phase={stagePhase}
         result={stageResult}
         variant={stageVariant}
+        revealStep={stageVariant === "reveal" ? (revealComplete ? "settled" : revealStep) : undefined}
         joinedCount={joinedCount}
         votedCount={votedCount}
         juryComplete={juryComplete}
