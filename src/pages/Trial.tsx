@@ -286,36 +286,31 @@ export default function Trial() {
         <main className="relative z-10 px-5 pb-10 max-w-md mx-auto">
           {Stage}
           <div className="relative z-10 space-y-3">
-          {!revealComplete && (
-            <VerdictReveal
-              counts={tally.counts}
-              total={tally.total}
-              winner={result}
-              confidence={confidence}
-              caseTitle={trial.crime_text}
-              accused={trial.accused_name}
-              sentence={sentence}
-              bestEvidence={best?.evidence_text || null}
-              onDone={() => setRevealComplete(true)}
-            />
-          )}
+          <VerdictReveal
+            counts={tally.counts}
+            total={tally.total}
+            winner={result}
+            confidence={confidence}
+            caseTitle={trial.crime_text}
+            accused={trial.accused_name}
+            sentence={sentence}
+            bestEvidence={best?.evidence_text || null}
+            onDone={() => setRevealComplete(true)}
+            settled={revealComplete}
+          />
 
-          {revealComplete && (
-            <div className="text-center animate-rise">
-              <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">Verdict delivered</p>
-              <p className="font-stamp text-2xl mt-1 text-accent">{VOTE_LABEL[result]}</p>
+          {/* Hidden VerdictCard kept mounted purely for PNG export */}
+          <div className="absolute -left-[10000px] top-0 pointer-events-none" aria-hidden="true">
+            <div ref={verdictCardRef}>
+              <VerdictCard
+                caseTitle={trial.crime_text}
+                accused={trial.accused_name}
+                result={result}
+                sentence={sentence}
+                confidence={confidence}
+                bestEvidence={best?.evidence_text || null}
+              />
             </div>
-          )}
-
-          <div ref={verdictCardRef} className="animate-tilt-in">
-            <VerdictCard
-              caseTitle={trial.crime_text}
-              accused={trial.accused_name}
-              result={result}
-              sentence={sentence}
-              confidence={confidence}
-              bestEvidence={best?.evidence_text || null}
-            />
           </div>
 
           {/* Primary CTA — keep the loop alive */}
