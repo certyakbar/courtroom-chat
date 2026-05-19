@@ -22,75 +22,179 @@ const DRAMATIC_TAGS: Record<VoteValue, string> = {
   everyone_wrong: "Court has failed society.",
 };
 
-const TONE: Record<VoteValue, { bg: string; glow: string; stampColor: string; }> = {
+const ACCUSED_TAGS: Record<VoteValue, string> = {
+  guilty: "stands accused.",
+  not_guilty: "awaits the jury.",
+  everyone_wrong: "is dragged into chaos.",
+};
+
+const TONE: Record<
+  VoteValue,
+  { bg: string; glow: string; flash: string; stampColor: string; chaos?: boolean }
+> = {
   guilty: {
-    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_28%/0.45),_transparent_60%)]",
-    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(var(--stamp)/0.32),_transparent_70%)]",
+    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.55),_transparent_60%)]",
+    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(var(--stamp)/0.4),_transparent_70%)]",
+    flash: "bg-[hsl(0_90%_55%/0.55)]",
     stampColor: "",
   },
   not_guilty: {
-    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(142_60%_25%/0.4),_transparent_60%)]",
-    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(142_70%_45%/0.28),_transparent_70%)]",
+    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(142_65%_25%/0.5),_transparent_60%)]",
+    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(142_70%_45%/0.35),_transparent_70%)]",
+    flash: "bg-[hsl(142_75%_50%/0.4)]",
     stampColor: "text-emerald-300",
   },
   everyone_wrong: {
-    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(38_92%_30%/0.4),_transparent_60%)]",
-    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(42_92%_56%/0.3),_transparent_70%)]",
+    bg: "bg-[radial-gradient(ellipse_at_top,_hsl(38_92%_32%/0.5),_transparent_60%)]",
+    glow: "bg-[radial-gradient(ellipse_at_center,_hsl(42_92%_56%/0.38),_transparent_70%)]",
+    flash: "bg-[hsl(42_95%_55%/0.45)]",
     stampColor: "text-amber-300",
+    chaos: true,
   },
 };
 
-export function VerdictReveal({ counts, total, winner, confidence, caseTitle, accused, sentence, bestEvidence, onDone, settled }: Props) {
-  const [step, setStep] = useState(settled ? 5 : 0);
-  // 0: dark, 1: jury reached verdict, 2: bars + accused shake, 3: gavel falls, 4: stamp + shake, 5: sentence/evidence
+// Stages:
+// 0 silence (lights down)
+// 1 "Jury has reached a verdict..."
+// 2 vote bars build (no winner highlighted yet)
+// 3 accused spotlight ("X stands accused.")
+// 4 gavel slam + screen shake
+// 5 stamp explosion + flash + dramatic tag
+// 6 sentence + best evidence drop in
+// 7 settled (final state, still big)
+
+export function VerdictReveal({
+  counts,
+  total,
+  winner,
+  confidence,
+  caseTitle,
+  accused,
+  sentence,
+  bestEvidence,
+  onDone,
+  settled,
+}: Props) {
+  const [step, setStep] = useState(settled ? 7 : 0);
   const [shake, setShake] = useState(false);
+  const [flash, setFlash] = useState(false);
 
   useEffect(() => {
-    if (settled) { setStep(5); return; }
+    if (settled) {
+      setStep(7);
+      return;
+    }
     const timers = [
-      setTimeout(() => setStep(1), 250),
-      setTimeout(() => setStep(2), 1400),
-      setTimeout(() => setStep(3), 2700),
-      setTimeout(() => { setStep(4); setShake(true); }, 3400),
-      setTimeout(() => setShake(false), 3950),
-      setTimeout(() => setStep(5), 4200),
-      setTimeout(() => onDone?.(), 5000),
+      setTimeout(() => setStep(1), 350),      // jury reached verdict
+      setTimeout(() => setStep(2), 1700),     // bars build
+      setTimeout(() => setStep(3), 3000),     // accused spotlight
+      setTimeout(() => setStep(4), 4100),     // gavel slam
+      setTimeout(() => {                       // stamp impact + flash + shake
+        setStep(5);
+        setShake(true);
+        setFlash(true);
+      }, 4750),
+      setTimeout(() => setFlash(false), 5050),
+      setTimeout(() => setShake(false), 5250),
+      setTimeout(() => setStep(6), 5500),     // sentence + evidence
+      setTimeout(() => {                       // settle
+        setStep(7);
+        onDone?.();
+      }, 6800),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onDone, settled]);
 
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   const tone = TONE[winner];
-  const isGuilty = winner === "guilty";
-  const isChaos = winner === "everyone_wrong";
+  const isChaos = !!tone.chaos;
+  const cinematic = !settled && step < 7;
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl border border-border bg-[hsl(220_30%_4%)] ${settled ? "p-5 sm:p-6 min-h-0" : "p-6 sm:p-10 min-h-[640px]"} flex flex-col grain perspective-stage transition-all duration-500 ${shake ? "animate-screen-shake" : ""}`}>
-      <div className={`absolute inset-0 pointer-events-none ${tone.bg}`} />
-      {step >= 4 && (
-        <div className={`absolute inset-0 pointer-events-none ${tone.glow} ${settled ? "" : "animate-rise"}`} />
+    <div
+      className={`relative overflow-hidden rounded-3xl border border-border bg-[hsl(220_35%_3%)] ${
+        cinematic ? "p-6 sm:p-10 min-h-[640px]" : "p-5 sm:p-7 min-h-0"
+      } flex flex-col grain perspective-stage transition-all duration-700 ${
+        shake ? "animate-screen-shake" : ""
+      } ${isChaos && step >= 5 ? "rotate-[0.4deg]" : ""}`}
+    >
+      {/* Base tone */}
+      <div
+        className={`absolute inset-0 pointer-events-none transition-opacity duration-700 ${tone.bg} ${
+          step >= 3 ? "opacity-100" : "opacity-60"
+        }`}
+      />
+
+      {/* Result glow on impact */}
+      {step >= 5 && (
+        <div
+          className={`absolute inset-0 pointer-events-none ${tone.glow} ${cinematic ? "animate-rise" : ""}`}
+        />
       )}
-      {!settled && <div className="spotlight-layer animate-spotlight" />}
+
+      {/* Stage-1 dim: lights down */}
+      {step === 0 && (
+        <div className="absolute inset-0 pointer-events-none bg-[hsl(220_40%_2%/0.85)]" />
+      )}
+
+      {/* Sweeping spotlight while cinematic */}
+      {cinematic && <div className="spotlight-layer animate-spotlight" />}
+
+      {/* Impact flash */}
+      {flash && (
+        <div
+          className={`absolute inset-0 pointer-events-none ${tone.flash} animate-rise mix-blend-screen`}
+        />
+      )}
 
       <div className="relative z-10 flex-1 flex flex-col">
-        <p className="text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground">Case</p>
-        <h2 className={`text-center font-display ${settled ? "text-base sm:text-lg" : "text-xl sm:text-2xl"} mt-1 text-balance`}>{caseTitle}</h2>
-        <p className="text-center text-sm text-muted-foreground mt-1">
+        {/* Header: case */}
+        <p className="text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
+          Case
+        </p>
+        <h2
+          className={`text-center font-display ${
+            cinematic ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"
+          } mt-1 text-balance`}
+        >
+          {caseTitle}
+        </h2>
+
+        {/* Accused */}
+        <p className="text-center text-sm text-muted-foreground mt-2">
           Accused:{" "}
-          <span className={`text-foreground font-medium inline-block ${step >= 3 && !settled ? "animate-shake text-primary" : "text-primary"}`}>
+          <span
+            className={`inline-block font-medium ${
+              step === 3 && !settled
+                ? "text-primary animate-shake text-2xl sm:text-3xl font-display"
+                : step >= 5
+                ? "text-foreground text-base"
+                : "text-primary"
+            } transition-all duration-300`}
+          >
             {accused}
           </span>
         </p>
 
-        <div className={`flex-1 flex flex-col items-center justify-center ${settled ? "mt-4 gap-3" : "mt-6 gap-6"}`}>
-          {step >= 1 && step < 3 && (
+        <div
+          className={`flex-1 flex flex-col items-center justify-center ${
+            cinematic ? "mt-6 gap-6" : "mt-4 gap-3"
+          }`}
+        >
+          {/* STAGE 1 — Jury reached a verdict */}
+          {step === 1 && (
             <p className="font-display text-2xl sm:text-3xl text-center text-foreground/90 animate-rise px-4">
-              The jury has reached a verdict<span className="animate-pulse">…</span>
+              The jury has reached a verdict
+              <span className="animate-pulse">…</span>
             </p>
           )}
 
-          {step >= 2 && step < 4 && (
+          {/* STAGE 2 — bars build (neutral; no winner shown yet) */}
+          {step === 2 && (
             <div className="w-full max-w-sm space-y-3 animate-rise">
+              <p className="text-center text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+                Tallying the group chat
+              </p>
               {(["guilty", "not_guilty", "everyone_wrong"] as VoteValue[]).map((k) => (
                 <div key={k}>
                   <div className="flex justify-between text-[10px] uppercase tracking-[0.25em] mb-1">
@@ -102,7 +206,7 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
                       className="h-full bar-fill rounded-full"
                       style={{
                         ["--bar-w" as any]: `${pct(counts[k])}%`,
-                        background: k === winner ? "var(--gradient-stamp)" : "hsl(var(--muted-foreground)/0.7)",
+                        background: "hsl(var(--muted-foreground)/0.7)",
                       }}
                     />
                   </div>
@@ -111,43 +215,100 @@ export function VerdictReveal({ counts, total, winner, confidence, caseTitle, ac
             </div>
           )}
 
+          {/* STAGE 3 — accused spotlight */}
           {step === 3 && (
-            <div className="animate-gavel-slam text-accent" style={{ filter: "drop-shadow(0 16px 24px hsl(var(--stamp)/0.55))" }}>
-              <Gavel className="w-24 h-24 sm:w-32 sm:h-32" strokeWidth={1.4} />
-            </div>
-          )}
-
-          {step >= 4 && (
-            <div className={`flex flex-col items-center ${settled ? "gap-2" : "gap-5 animate-rise"}`}>
-              <div className={`stamp font-stamp ${settled ? "text-4xl sm:text-5xl px-4 py-2" : "text-5xl sm:text-7xl animate-stamp px-6 py-4"} leading-none ${tone.stampColor} ${isChaos ? "rotate-3" : ""}`}>
-                {VOTE_LABEL[winner]}
-              </div>
-              {!settled && (
-                <p className="font-display text-lg sm:text-xl text-foreground/90 text-center text-balance">
-                  {DRAMATIC_TAGS[winner]}
-                </p>
-              )}
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Jury confidence <span className="text-accent font-semibold">{confidence}%</span>
+            <div className="text-center animate-rise px-4">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-accent font-stamp">
+                The court calls
+              </p>
+              <p className="font-display text-3xl sm:text-4xl mt-2 text-primary animate-shake">
+                {accused}
+              </p>
+              <p className="mt-3 text-sm text-foreground/80">
+                {accused} {ACCUSED_TAGS[winner]}
               </p>
             </div>
           )}
 
+          {/* STAGE 4 — gavel slam */}
+          {step === 4 && (
+            <div
+              className="animate-gavel-slam text-accent"
+              style={{ filter: "drop-shadow(0 18px 28px hsl(var(--stamp)/0.6))" }}
+            >
+              <Gavel className="w-28 h-28 sm:w-36 sm:h-36" strokeWidth={1.4} />
+            </div>
+          )}
+
+          {/* STAGE 5+ — stamp explosion / settled */}
           {step >= 5 && (
-            <div className={`w-full max-w-md space-y-2 ${settled ? "" : "animate-tilt-in"}`}>
-              <div className={`court-card ${settled ? "p-3" : "p-4"}`}>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Sentence</p>
-                <p className={`font-display ${settled ? "text-base" : "text-lg"} mt-1 text-balance`}>{sentence}</p>
+            <div className={`flex flex-col items-center ${cinematic ? "gap-4" : "gap-3"}`}>
+              <div
+                className={`stamp font-stamp leading-none ${tone.stampColor} ${
+                  isChaos ? "rotate-3" : ""
+                } ${
+                  cinematic
+                    ? "text-5xl sm:text-7xl animate-stamp px-6 py-4"
+                    : "text-4xl sm:text-6xl px-5 py-3"
+                }`}
+              >
+                {VOTE_LABEL[winner]}
+              </div>
+
+              {(step >= 5) && (
+                <p
+                  className={`font-display text-foreground/90 text-center text-balance ${
+                    cinematic ? "text-lg sm:text-xl animate-rise" : "text-sm sm:text-base"
+                  }`}
+                >
+                  {DRAMATIC_TAGS[winner]}
+                </p>
+              )}
+
+              <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+                Jury confidence{" "}
+                <span className="text-accent font-semibold">{confidence}%</span>
+              </p>
+            </div>
+          )}
+
+          {/* STAGE 6+ — sentence + evidence */}
+          {step >= 6 && (
+            <div
+              className={`w-full max-w-md space-y-2 ${cinematic ? "animate-tilt-in" : ""}`}
+            >
+              <div className={`court-card ${cinematic ? "p-4" : "p-3"}`}>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  Sentence
+                </p>
+                <p
+                  className={`font-display ${
+                    cinematic ? "text-lg" : "text-base"
+                  } mt-1 text-balance`}
+                >
+                  {sentence}
+                </p>
               </div>
               {bestEvidence && (
                 <div className="paper rounded-2xl p-4 animate-rise">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-[hsl(24_20%_35%)]">Best evidence</p>
-                  <p className="mt-1 italic text-balance text-[hsl(var(--paper-ink))]">"{bestEvidence}"</p>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-[hsl(24_20%_35%)]">
+                    Best evidence
+                  </p>
+                  <p className="mt-1 italic text-balance text-[hsl(var(--paper-ink))]">
+                    "{bestEvidence}"
+                  </p>
                 </div>
               )}
             </div>
           )}
         </div>
+
+        {/* Bottom mark — only in settled state, makes it screenshot-worthy */}
+        {step >= 7 && (
+          <p className="mt-4 text-center text-[10px] uppercase tracking-[0.45em] text-accent font-stamp">
+            ⚖ OBJECTION!
+          </p>
+        )}
       </div>
     </div>
   );
