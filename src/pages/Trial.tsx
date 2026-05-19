@@ -282,9 +282,9 @@ export default function Trial() {
     return (
       <div className="min-h-dvh relative">
         <CourtHeader />
-        <main className="relative z-10 px-5 pb-16 max-w-md mx-auto space-y-5">
+        <main className="relative z-10 px-5 pb-10 max-w-md mx-auto">
           {Stage}
-          <div className="relative z-10 space-y-5">
+          <div className="relative z-10 space-y-3">
           <VerdictReveal
             counts={tally.counts}
             total={tally.total}
@@ -307,54 +307,46 @@ export default function Trial() {
             />
           </div>
 
-          <p className="text-center text-[11px] text-muted-foreground">
-            ↑ Screenshot this card or save it below.
-          </p>
-
-          {/* Dominant CTA — drop verdict back into chat */}
-          <button
-            onClick={() => nativeShare({ title: "OBJECTION! Verdict", text: plainMsg, url }, plainMsg)}
-            className="btn-hero w-full text-lg animate-pulse-glow"
-          >
-            <Share2 className="w-5 h-5" /> Drop Verdict in Chat
-          </button>
-
-          {/* Platform-specific verdict copies */}
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2 text-center">
-              Or copy the verdict
-            </p>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button onClick={() => copyText(waMsg, "WhatsApp verdict copied")} className="btn-ghost-court">
-                <MessageCircle className="w-4 h-4" /> WhatsApp
-              </button>
-              <button onClick={() => copyText(discordMsg, "Discord verdict copied")} className="btn-ghost-court">
-                <Hash className="w-4 h-4" /> Discord
-              </button>
-              <button onClick={() => copyText(plainMsg, "Plain verdict copied")} className="btn-ghost-court">
-                <Copy className="w-4 h-4" /> Plain text
-              </button>
-              <button onClick={() => copyText(url, "Link copied")} className="btn-ghost-court">
-                <LinkIcon className="w-4 h-4" /> Link
-              </button>
-            </div>
-          </div>
-
-          {/* Save card + revenge — keep chat loop alive */}
-          <button onClick={saveCard} className="btn-ghost-court w-full">
-            <Download className="w-4 h-4" /> Save Verdict Card (PNG)
-          </button>
-
+          {/* Primary CTA — keep the loop alive */}
           <Link
             to={`/?revenge=${encodeURIComponent(trial.accused_name)}`}
-            className="btn-gold w-full"
+            className="btn-gold w-full text-lg animate-pulse-glow"
           >
-            <Repeat2 className="w-4 h-4" /> File Revenge Case
+            <Repeat2 className="w-5 h-5" /> File Revenge Case
           </Link>
 
-          <Link to="/" className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground">
-            <Gavel className="w-3.5 h-3.5" /> Start a new trial
+          {/* Secondary CTA */}
+          <Link to="/" className="btn-ghost-court w-full">
+            <Gavel className="w-4 h-4" /> Start New Trial
           </Link>
+
+          {/* Compact share/save row */}
+          <details className="court-card p-3 group">
+            <summary className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground cursor-pointer flex items-center justify-between list-none">
+              <span>Share or save</span>
+              <span className="text-muted-foreground group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <button onClick={() => nativeShare({ title: "OBJECTION! Verdict", text: plainMsg, url }, plainMsg)} className="btn-ghost-court text-xs py-2">
+                <Share2 className="w-3.5 h-3.5" /> Share
+              </button>
+              <button onClick={saveCard} className="btn-ghost-court text-xs py-2">
+                <Download className="w-3.5 h-3.5" /> Save PNG
+              </button>
+              <button onClick={() => copyText(waMsg, "WhatsApp verdict copied")} className="btn-ghost-court text-xs py-2">
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              </button>
+              <button onClick={() => copyText(discordMsg, "Discord verdict copied")} className="btn-ghost-court text-xs py-2">
+                <Hash className="w-3.5 h-3.5" /> Discord
+              </button>
+              <button onClick={() => copyText(plainMsg, "Plain verdict copied")} className="btn-ghost-court text-xs py-2">
+                <Copy className="w-3.5 h-3.5" /> Plain
+              </button>
+              <button onClick={() => copyText(url, "Link copied")} className="btn-ghost-court text-xs py-2">
+                <LinkIcon className="w-3.5 h-3.5" /> Link
+              </button>
+            </div>
+          </details>
           </div>
         </main>
       </div>
