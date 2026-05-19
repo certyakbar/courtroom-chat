@@ -46,14 +46,19 @@ export default function TrialShare() {
 
   return (
     <div className="min-h-dvh relative">
-      <CourtroomStage
-        phase="summons"
-        joinedCount={0}
-        votedCount={0}
-        juryComplete={false}
-        className="fixed inset-0 z-0"
-      />
       <main className="relative z-10 px-5 pt-6 pb-20 max-w-md mx-auto">
+        {/* Stage sits inside the content column so geometry frames the card, not the whole viewport */}
+        <div className="pointer-events-none absolute -inset-x-8 sm:-inset-x-16 top-0 bottom-0 z-0">
+          <CourtroomStage
+            phase="summons"
+            variant="hero"
+            joinedCount={0}
+            votedCount={0}
+            juryComplete={false}
+            className="absolute inset-0"
+          />
+        </div>
+        <div className="relative z-10">
         {/* Screenshot-friendly summons card — generic, no case details */}
         <div id="summons-card" className="relative">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
@@ -157,6 +162,7 @@ export default function TrialShare() {
         >
           <Gavel className="w-3.5 h-3.5" /> File another case
         </Link>
+        </div>
       </main>
     </div>
   );

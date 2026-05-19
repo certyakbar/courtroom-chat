@@ -224,18 +224,26 @@ export default function Trial() {
   const stageResult: Result = showReveal
     ? ((trial.result as Result) || (tally.winner as Result))
     : null;
+  const stageVariant: "ambient" | "waiting" | "reveal" = showReveal
+    ? "reveal"
+    : myVote
+    ? "waiting"
+    : "ambient";
 
   const Stage = (
-    <CourtroomStage
-      phase={stagePhase}
-      result={stageResult}
-      joinedCount={joinedCount}
-      votedCount={votedCount}
-      juryComplete={juryComplete}
-      countdownUrgent={countdown.urgent}
-      countdownCritical={countdown.critical}
-      className="fixed inset-0 z-0"
-    />
+    <div className="pointer-events-none absolute -inset-x-8 sm:-inset-x-20 top-0 bottom-0 z-0">
+      <CourtroomStage
+        phase={stagePhase}
+        result={stageResult}
+        variant={stageVariant}
+        joinedCount={joinedCount}
+        votedCount={votedCount}
+        juryComplete={juryComplete}
+        countdownUrgent={countdown.urgent}
+        countdownCritical={countdown.critical}
+        className="absolute inset-0"
+      />
+    </div>
   );
 
   if (showReveal) {
@@ -273,9 +281,10 @@ export default function Trial() {
 
     return (
       <div className="min-h-dvh relative">
-        {Stage}
         <CourtHeader />
         <main className="relative z-10 px-5 pb-16 max-w-md mx-auto space-y-5">
+          {Stage}
+          <div className="relative z-10 space-y-5">
           <VerdictReveal
             counts={tally.counts}
             total={tally.total}
@@ -346,6 +355,7 @@ export default function Trial() {
           <Link to="/" className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground">
             <Gavel className="w-3.5 h-3.5" /> Start a new trial
           </Link>
+          </div>
         </main>
       </div>
     );
@@ -358,9 +368,10 @@ export default function Trial() {
 
   return (
     <div className={`min-h-dvh relative ${countdown.critical ? "animate-screen-shake" : ""}`}>
-      {Stage}
       <CourtHeader />
       <main className="relative z-10 px-5 pb-16 max-w-md mx-auto perspective-stage">
+        {Stage}
+        <div className="relative z-10">
         {/* Case header — dramatic */}
         <div className={`court-card p-5 relative overflow-hidden ${countdown.urgent ? "animate-breathe" : ""}`}>
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(0_84%_30%/0.18),_transparent_60%)]" />
@@ -572,6 +583,7 @@ export default function Trial() {
             <p className="text-xs text-muted-foreground">Time's up. Waiting for the host to drop the verdict.</p>
           </div>
         )}
+        </div>
       </main>
 
       <style>{`
