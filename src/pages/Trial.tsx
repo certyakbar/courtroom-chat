@@ -64,6 +64,7 @@ export default function Trial() {
   const [revealing, setRevealing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [revealComplete, setRevealComplete] = useState(false);
+  const [revealStep, setRevealStep] = useState<import("@/components/courtroom3d/CourtroomStage").RevealStep | undefined>(undefined);
   const [microIdx, setMicroIdx] = useState(0);
   const verdictCardRef = useRef<HTMLDivElement>(null);
 
