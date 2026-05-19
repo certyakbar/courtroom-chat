@@ -64,6 +64,7 @@ export default function Trial() {
   const [revealing, setRevealing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [revealComplete, setRevealComplete] = useState(false);
+  const [revealStep, setRevealStep] = useState<import("@/components/courtroom3d/CourtroomStage").RevealStep | undefined>(undefined);
   const [microIdx, setMicroIdx] = useState(0);
   const verdictCardRef = useRef<HTMLDivElement>(null);
 
@@ -237,6 +238,7 @@ export default function Trial() {
         phase={stagePhase}
         result={stageResult}
         variant={stageVariant}
+        revealStep={stageVariant === "reveal" ? (revealComplete ? "settled" : revealStep) : undefined}
         joinedCount={joinedCount}
         votedCount={votedCount}
         juryComplete={juryComplete}
@@ -296,6 +298,7 @@ export default function Trial() {
             sentence={sentence}
             bestEvidence={best?.evidence_text || null}
             onDone={() => setRevealComplete(true)}
+            onStepChange={setRevealStep}
             settled={revealComplete}
           />
 

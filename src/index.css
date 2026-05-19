@@ -287,6 +287,19 @@
 .animate-urgent-pulse { animation: urgentPulse 0.9s ease-in-out infinite; }
 .bar-fill { animation: barFill 0.9s ease-out forwards; }
 
+@keyframes gavelRise {
+  0% { transform: translateY(40px) rotate(-30deg) scale(0.85); opacity: 0; }
+  60% { transform: translateY(-30px) rotate(-78deg) scale(1.05); opacity: 1; }
+  100% { transform: translateY(-70px) rotate(-95deg) scale(1.08); opacity: 1; }
+}
+@keyframes gavelSlam3D {
+  0% { transform: translateY(-90px) rotate(-95deg) scale(1.1); }
+  35% { transform: translateY(8px) rotate(-12deg) scale(1.18); }
+  50% { transform: translateY(-18px) rotate(-22deg) scale(1.05); }
+  70% { transform: translateY(4px) rotate(-14deg) scale(1.08); }
+  100% { transform: translateY(0) rotate(-14deg) scale(1); }
+}
+
 .perspective-stage { perspective: 1200px; transform-style: preserve-3d; }
 .tilt-press { transition: transform .2s ease; transform-style: preserve-3d; }
 .tilt-press-selected { transform: perspective(900px) rotateX(-6deg) translateZ(14px) scale(1.02); }

@@ -5,6 +5,14 @@ import { hasWebGL, prefersReducedMotion } from "./webglSupport";
 export type Phase = "summons" | "voting" | "waiting" | "reveal";
 export type Result = "guilty" | "not_guilty" | "everyone_wrong" | null;
 export type StageVariant = "ambient" | "filing" | "hero" | "waiting" | "reveal";
+export type RevealStep =
+  | "silent"
+  | "jury_locking"
+  | "accused"
+  | "gavel_rise"
+  | "impact"
+  | "sentence"
+  | "settled";
 
 export interface CourtroomStageProps {
   phase: Phase;
@@ -15,6 +23,7 @@ export interface CourtroomStageProps {
   countdownUrgent?: boolean;
   countdownCritical?: boolean;
   variant?: StageVariant;
+  revealStep?: RevealStep;
   className?: string;
 }
 
@@ -39,16 +48,24 @@ class Stage3DBoundary extends Component<
 }
 
 export function CourtroomStage(props: CourtroomStageProps) {
-  const { className, variant = "ambient" } = props;
+  const { className, variant = "ambient", revealStep } = props;
   const [enable3D, setEnable3D] = useState(false);
 
   useEffect(() => {
     setEnable3D(hasWebGL() && !prefersReducedMotion());
   }, []);
 
-  // Subtle by default — never compete with the HTML UI.
+  // Reveal stage should let the 3D scene dominate during impact.
   const opacity =
-    variant === "reveal" ? 1 : variant === "waiting" ? 0.95 : 0.85;
+    variant === "reveal"
+      ? revealStep === "impact"
+        ? 1
+        : revealStep === "settled"
+        ? 0.95
+        : 1
+      : variant === "waiting"
+      ? 0.95
+      : 0.85;
 
   return (
     <div
@@ -65,10 +82,11 @@ export function CourtroomStage(props: CourtroomStageProps) {
       ) : (
         <CourtroomStageFallback {...props} />
       )}
-      {/* Radial vignette mask: fades geometry into the page edges, especially bottom. */}
+      {/* Radial vignette mask: fades geometry into the page edges. Lifts during impact. */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 transition-opacity duration-500"
         style={{
+          opacity: revealStep === "impact" ? 0.4 : 1,
           background:
             "radial-gradient(ellipse 70% 55% at 50% 38%, transparent 0%, hsl(220 35% 3% / 0.55) 65%, hsl(220 35% 3% / 0.95) 100%)",
         }}
