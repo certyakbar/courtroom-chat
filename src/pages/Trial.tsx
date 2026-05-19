@@ -63,6 +63,7 @@ export default function Trial() {
   const [submitting, setSubmitting] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [revealComplete, setRevealComplete] = useState(false);
   const [microIdx, setMicroIdx] = useState(0);
   const verdictCardRef = useRef<HTMLDivElement>(null);
 
