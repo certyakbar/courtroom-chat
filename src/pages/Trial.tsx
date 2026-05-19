@@ -355,6 +355,7 @@ export default function Trial() {
           <Link to="/" className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground">
             <Gavel className="w-3.5 h-3.5" /> Start a new trial
           </Link>
+          </div>
         </main>
       </div>
     );
